@@ -1,0 +1,189 @@
+---
+title: "Visão geral da carteira"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: rows
+    vertical_layout: fill
+runtime: shiny # Para o shiny funcionar corretamente
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+library(shiny)
+library(tidyverse)
+library(DT)
+
+setwd("C:/Users/kayla.abreu/OneDrive - ESPM/Documentos/Base de Dados CDD")
+
+library(readxl)
+dados=read_xlsx("Aula 05.xlsx")
+dados2=filter(dados, Renda<100000)
+
+dados2 = dados2 %>% 
+  mutate(Endividamento=factor(Endividamento,
+         levels=c("Baixo","Intermediario","Alto")))
+```
+
+## Input {.sidebar data-width="250"}
+
+### Controles
+
+```{r}
+
+wellPanel(sliderInput("faixas", "Número de faixas do histograma: ",5,15,10), # Ao usar well panel, colocamos , entre os comandos. Isto acontece até o penúltimo
+
+checkboxGroupInput(
+  # Variável pra guardar o input
+    "prof", # input$prof está com esse valor guardado
+    "Profissões:",
+    choices = sort(unique(dados$Profissao)),
+    selected = sort(unique(dados$Profissao))
+    ),
+
+checkboxGroupInput(
+    "endiv",
+    "Endividamento:",
+    choices = c("Baixo", "Intermediario", "Alto"),
+    selected = c("Baixo", "Intermediario", "Alto")
+))
+
+```
+
+## Output {data-width="350"}
+
+### 💰 Distribuição de renda anual
+
+```{r}
+
+renderPlot({  
+  dadosfiltro = dados2 %>%
+    # %in% Pega todos que estão no input$prof e input$endiv
+    filter(
+      Profissao %in% input$prof,
+      Endividamento %in% input$endiv) # Garante que, o que o usuário escolher ou não afeterá o gráfico. Pegando todo o input do usuário e colocando em um dt novo
+
+ggplot(dadosfiltro, aes(
+	x = Renda,y=(after_stat(count)/sum(after_stat(count)))*100,fill = Endividamento
+	)) + 
+ 	geom_histogram(color="white",bins=input$faixas) + 
+  	labs(x = "Renda (dólares)", y = "% de clientes") +
+  facet_wrap(~Endividamento) + # Dividir em 3 gráficos
+  guides(fill="none") +
+	theme_bw() +
+  guides(fill="none")
+})
+
+```
+
+### 💵 Investimento por nível de gasto
+
+```{r}
+
+renderPlot({
+    dadosfiltro = dados2 %>%
+    filter(
+    Profissao %in% input$prof,
+    Endividamento %in% input$endiv
+    )
+    
+ggplot(dadosfiltro, aes(x = Gasto, y = Investimento, fill = Gasto)) +
+geom_boxplot(outlier.color = "black") +
+scale_fill_manual(values = c("Baixo" = "lightblue", "Alto" = "aquamarine4")) +
+scale_y_continuous(labels = scales::dollar_format(
+    prefix = "US$ ",
+    big.mark = ".",
+    decimal.mark = ",",
+    accuracy = 0.01
+    )) +
+labs(
+x = "Nível de gasto",
+y = "Investimento (US$)"
+) +
+guides(fill = "none") +
+theme_minimal()
+})
+
+```
+
+## Output {data-width="350"}
+
+### 📊 Tabela Resumo
+
+```{r}
+
+renderDT({
+  tabela_resumo = dados2 %>%
+  filter(
+    Profissao%in% input$prof,
+    Endividamento%in% input$endiv
+  ) %>%
+  group_by(Profissao) %>%
+  summarise(
+    `Renda média` = mean(Renda, na.rm = TRUE),
+    `Investimento médio` = mean(Investimento, na.rm = TRUE),
+    `Saldo médio` = mean(Saldo_Mensal, na.rm = TRUE),
+    `N` = n(),
+    .groups = "drop"
+  )
+  # criar colunas de cor
+  tabela_resumo <- tabela_resumo %>%
+  mutate(
+    cor_renda = case_when(
+    `Renda média` == max(`Renda média`) ~ "#d4edda",
+    `Renda média` == min(`Renda média`) ~ "#f8d7da",
+    TRUE ~ "white"
+  ),
+  cor_inv = case_when(
+    `Investimento médio` == max(`Investimento médio`) ~ "#d4edda",
+    `Investimento médio` == min(`Investimento médio`) ~ "#f8d7da",
+    TRUE ~ "white"
+  ),
+  cor_saldo = case_when(
+    `Saldo médio` == max(`Saldo médio`) ~ "#d4edda",
+    `Saldo médio` == min(`Saldo médio`) ~ "#f8d7da",
+    TRUE ~ "white"
+  )
+  )
+  datatable(
+    tabela_resumo,
+    caption = "Resumo por profissão",
+    colnames = c("Profissão", "Renda média", "Investimento médio", "Saldo médio", "N", "cor_renda", "cor_inv", "cor_saldo"),
+    rownames = FALSE,
+    options = list(
+      pageLength = 6,
+      scrollY = "180px",
+      scrollCollapse = TRUE,
+      dom= "tip",
+      columnDefs = list(
+        list(className = 'dt-center', targets = "_all"),
+        list(visible = FALSE, targets = 5:7)  # esconder colunas auxiliares
+      )
+    )
+  ) %>%
+  formatCurrency(
+    columns = c("Renda média", "Investimento médio", "Saldo médio"),
+    currency = "US$ ",
+    interval = 3,
+    mark = ".",
+    dec.mark = ",",
+    digits = 2
+  ) %>%
+  formatStyle(
+    "Renda média",
+    valueColumns= "cor_renda",
+    backgroundColor= JS("value")
+  ) %>%
+  formatStyle(
+    "Investimento médio",
+    valueColumns= "cor_inv",
+    backgroundColor= JS("value")
+  ) %>%
+  formatStyle(
+    "Saldo médio",
+    valueColumns= "cor_saldo",
+    backgroundColor= JS("value")
+  )
+})
+
+```
+

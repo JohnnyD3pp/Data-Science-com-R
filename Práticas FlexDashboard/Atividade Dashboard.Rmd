@@ -1,0 +1,463 @@
+---
+title: "Dashboard"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: fill
+    theme: lumen
+runtime: shiny
+---
+
+```{r ler_dados, include=FALSE}
+
+library(flexdashboard)
+library(shiny)
+library(tidyverse)
+library(DT)
+library(RColorBrewer)
+library(scales)
+library(plotly)
+library(leaflet)
+library(maps)
+
+setwd("C:/Users/kayla.abreu/OneDrive - ESPM/Documentos/Base de Dados CDD")
+library(readxl)
+dados = read_xlsx("Aula 05.xlsx")
+
+dados2=filter(dados, dados$Renda<100000)
+
+dados2 = dados2 %>% 
+  mutate(Endividamento=factor(Endividamento,
+         levels=c("Baixo","Intermediario","Alto")))
+
+# Filtros por cidades e mockup de dados na base devem ser feitos aqui neste primeiro code-chunk
+
+data(world.cities)
+# Coloca uma semente
+set.seed(123)
+data(world.cities)
+
+# Coordenadas de algumas cidades brasileiras
+cidades_br = world.cities %>%
+  # Filtra apenas cidades do Brasil
+  filter(country.etc == "Brazil") %>%
+  # Ao pegar as cidades, preciso que ele armazene o nome, lat, long e tamanho da população.
+  select(name, lat, long, pop) %>%
+  arrange(desc(pop)) %>%
+  # Pega só as primeiras 20 cidades
+  slice(1:20) %>%
+  rename(Cidade = name)
+
+# Base auxiliar: cada cliente recebe uma cidade fictícia
+
+# Faz um sorteio de cidades do tamanho da nossa amostra (df)
+dados_mapa = dados2 %>%
+  # Replace garante que essa cidade possa se repetir, ou seja, duas pessoas podem ser de SP. Em tamanho n(tamanho da nossa base original)
+  mutate(Cidade = sample(cidades_br$Cidade, n(), replace = TRUE)) %>%
+  # Junta de acordo com alguma informação, junta a cidade latitude e longitude por cidade
+  left_join(cidades_br %>% select(Cidade, lat, long), by = "Cidade")
+
+```
+
+# KPI'S {data-orientation="rows"}
+
+## input {.sidebar data-width="250"}
+
+```{r areacontrole}
+wellPanel(checkboxGroupInput(
+  "prof1",
+  "Profissões:",
+  choices = sort(unique(dados2$Profissao)),
+  selected = sort(unique(dados2$Profissao))
+))
+```
+
+## Row {data-width="650"}
+
+### Percentual de Alto Endividamento
+
+```{r Percentual_alto_endiv, echo=FALSE}
+renderGauge({
+  filtro_prof = dados2 %>%
+    filter(Profissao %in% input$prof1)
+
+contagem = table(filtro_prof$Endividamento)
+Endividamentos =round(prop.table(contagem)*100, 2)
+
+# Pega só o número na filtragem (% Dos maiores em divida)
+Alto_Endividamento = as.numeric(Endividamentos["Alto"])
+
+
+gauge(Alto_Endividamento,min=0,max=100,symbol="%",gaugeSectors(success=c(0.,15),warning=c(16,30),danger=c(31,100),colors = c("green", "yellow", "red")))})
+
+# Verde para tudo bem, amarelo para atenção e vermelho para alerta
+
+
+```
+
+## Row {data-width="650"} {data-height=500}
+
+### Clientes em atraso
+
+```{r pag_atraso, echo=FALSE}
+renderValueBox({
+  filtro_prof = dados2 %>%
+    filter(Profissao %in% input$prof1)
+
+# Se for > 0 é True, se não, False
+contagem = table(filtro_prof$Atrasados > 0)
+Atraso =round(prop.table(contagem)*100, 1)
+
+# paste0 para contatenar e ['TRUE'] para aparecer apenas o percentual de true
+valueBox(paste0(Atraso['TRUE'], '%'), icon="fa-triangle-exclamation", color="lightblue")})
+```
+
+### Pagam o valor mínimo da fatura
+
+```{r valor_min, echo=FALSE}
+renderValueBox({
+  filtro_prof = dados2 %>%
+    filter(Profissao %in% input$prof1)
+
+contagem = table(filtro_prof$Valor_minimo)
+pagamento_minimo =round(prop.table(contagem)*100, 1)
+
+# Pega só o número na filtragem (% Dos maiores em divida)
+pag_min = as.numeric(pagamento_minimo["Sim"])
+
+valueBox(paste0(pag_min, '%'), icon="fa-credit-card", color="lightblue")})
+
+```
+
+## Row {data-width="650"} {data-height=500}
+
+### Investimento Médio
+
+```{r invest_medio, echo=FALSE}
+renderValueBox({
+  filtro_prof = dados2 %>%
+    filter(Profissao %in% input$prof1)
+  
+# Média dos investimentos
+# Mas somente a média dos clientes altamente endividados
+# filtramos pelo filtro_prof para os controles funcionarem (que inclusive vem de dados2, com alto endividamento)
+dados_alto = filter(filtro_prof, Endividamento == "Alto")
+Investimento_Medio = round(mean(dados_alto$Investimento),2)
+
+Investimento_Medio=dollar(Investimento_Medio,prefix= "US$ ",big.mark= ".",decimal.mark= ",",accuracy=0.01)
+
+# É necessário sempre utilizar fa antes do ícone
+valueBox(Investimento_Medio, icon="fa-money-bill-trend-up", color="lightblue")})
+
+```
+
+### Média de Empréstimos
+
+```{r media_emprest, echo=FALSE}
+dados_alto = filter(dados, Endividamento == "Alto")
+Media_Emprestimo = round(mean(dados_alto$Emprestimos),0)
+
+valueBox(Media_Emprestimo, icon="fa-money-check-dollar", color="lightblue")
+
+```
+
+# Visão Geral
+
+## Input {.sidebar data-width="250"}
+
+```{r}
+
+wellPanel(checkboxGroupInput(
+  # Variável pra guardar o input
+    "prof2", # input$prof está com esse valor guardado
+    "Profissões:",
+    choices = sort(unique(dados$Profissao)),
+    selected = sort(unique(dados$Profissao))
+    ),
+
+checkboxGroupInput(
+    "endiv2",
+    "Endividamento:",
+    choices = c("Baixo", "Intermediario", "Alto"),
+    selected = c("Baixo", "Intermediario", "Alto")
+))
+
+```
+
+## Output {data-width="350"} {.tabset}
+
+### 📃 Idade x Endividamento
+
+```{r grafico_idadeXendiv, echo=FALSE}
+
+renderPlot({
+    dadosfiltro = dados2 %>%
+    filter(
+    Profissao %in% input$prof2,
+    Endividamento %in% input$endiv2
+    )
+
+ggplot(dadosfiltro, aes(y = Idade, x= Endividamento, fill=Endividamento)) +
+geom_boxplot(color="black",outlier.color="hotpink") +labs(x = "Nível de Endividamento", y = "Idade") +scale_fill_brewer(palette="Pastel1") + guides(fill="none")})
+```
+
+### 💳 Empréstimo x Saldo
+
+```{r grafico_empresXsaldo, echo=FALSE}
+
+renderPlot({
+    dadosfiltro = dados2 %>%
+    filter(
+    Profissao %in% input$prof2,
+    Endividamento %in% input$endiv2
+    )
+
+ggplot(dadosfiltro, aes(y = Saldo_Mensal, x= Emprestimos)) +
+geom_point(color="hotpink") +
+labs(x = "Empréstimos", y = "Saldo mensal (dólares)") +
+scale_x_continuous(breaks = seq(min(dados$Emprestimos),
+max(dados$Emprestimos), 1)) +
+scale_y_continuous(labels = scales::dollar_format(prefix = "$", big.mark =
+".",decimal.mark = ","))})
+```
+
+# Ánalise dos clientes
+
+## Input {.sidebar data-width="250"}
+
+```{r}
+
+wellPanel(sliderInput("faixas", "Número de faixas do histograma: ",5,15,10), # Ao usar well panel, colocamos , entre os comandos. Isto acontece até o penúltimo
+
+checkboxGroupInput(
+  # Variável pra guardar o input
+    "prof3", # input$prof está com esse valor guardado
+    "Profissões:",
+    choices = sort(unique(dados$Profissao)),
+    selected = sort(unique(dados$Profissao))
+    ),
+
+checkboxGroupInput(
+    "endiv3",
+    "Endividamento:",
+    choices = c("Baixo", "Intermediario", "Alto"),
+    selected = c("Baixo", "Intermediario", "Alto")
+))
+
+```
+
+## Output {data-width="350"} {.tabset}
+
+### 💰 Distribuição de renda anual
+
+```{r}
+
+renderPlot({  
+  dadosfiltro = dados2 %>%
+    # %in% Pega todos que estão no input$prof e input$endiv
+    filter(
+      Profissao %in% input$prof3,
+      Endividamento %in% input$endiv3) # Garante que, o que o usuário escolher ou não afeterá o gráfico. Pegando todo o input do usuário e colocando em um dt novo
+
+ggplot(dadosfiltro, aes(
+	x = Renda,y=(after_stat(count)/sum(after_stat(count)))*100,fill = Endividamento
+	)) + 
+ 	geom_histogram(color="white",bins=input$faixas) + 
+  	labs(x = "Renda (dólares)", y = "% de clientes") +
+  facet_wrap(~Endividamento) + # Dividir em 3 gráficos
+  guides(fill="none") +
+	theme_bw() +
+  guides(fill="none")
+})
+
+```
+
+### 💵 Investimento por nível de gasto
+
+```{r}
+
+renderPlot({
+    dadosfiltro = dados2 %>%
+    filter(
+    Profissao %in% input$prof3,
+    Endividamento %in% input$endiv3
+    )
+    
+ggplot(dadosfiltro, aes(x = Gasto, y = Investimento, fill = Gasto)) +
+geom_boxplot(outlier.color = "black") +
+scale_fill_manual(values = c("Baixo" = "lightblue", "Alto" = "aquamarine4")) +
+scale_y_continuous(labels = scales::dollar_format(
+    prefix = "US$ ",
+    big.mark = ".",
+    decimal.mark = ",",
+    accuracy = 0.01
+    )) +
+labs(
+x = "Nível de gasto",
+y = "Investimento (US$)"
+) +
+guides(fill = "none") +
+theme_minimal()
+})
+
+```
+
+### 📊 Tabela Resumo
+
+```{r}
+
+renderDT({
+  tabela_resumo = dados2 %>%
+  filter(
+    Profissao%in% input$prof3,
+    Endividamento%in% input$endiv3
+  ) %>%
+  group_by(Profissao) %>%
+  summarise(
+    `Renda média` = mean(Renda, na.rm = TRUE),
+    `Investimento médio` = mean(Investimento, na.rm = TRUE),
+    `Saldo médio` = mean(Saldo_Mensal, na.rm = TRUE),
+    `N` = n(),
+    .groups = "drop"
+  )
+  # criar colunas de cor
+  tabela_resumo <- tabela_resumo %>%
+  mutate(
+    cor_renda = case_when(
+    `Renda média` == max(`Renda média`) ~ "#d4edda",
+    `Renda média` == min(`Renda média`) ~ "#f8d7da",
+    TRUE ~ "white"
+  ),
+  cor_inv = case_when(
+    `Investimento médio` == max(`Investimento médio`) ~ "#d4edda",
+    `Investimento médio` == min(`Investimento médio`) ~ "#f8d7da",
+    TRUE ~ "white"
+  ),
+  cor_saldo = case_when(
+    `Saldo médio` == max(`Saldo médio`) ~ "#d4edda",
+    `Saldo médio` == min(`Saldo médio`) ~ "#f8d7da",
+    TRUE ~ "white"
+  )
+  )
+  datatable(
+    tabela_resumo,
+    caption = "Resumo por profissão",
+    colnames = c("Profissão", "Renda média", "Investimento médio", "Saldo médio", "N", "cor_renda", "cor_inv", "cor_saldo"),
+    rownames = FALSE,
+    options = list(
+      pageLength = 6,
+      scrollY = "180px",
+      scrollCollapse = TRUE,
+      dom= "tip",
+      columnDefs = list(
+        list(className = 'dt-center', targets = "_all"),
+        list(visible = FALSE, targets = 5:7)  # esconder colunas auxiliares
+      )
+    )
+  ) %>%
+  formatCurrency(
+    columns = c("Renda média", "Investimento médio", "Saldo médio"),
+    currency = "US$ ",
+    interval = 3,
+    mark = ".",
+    dec.mark = ",",
+    digits = 2
+  ) %>%
+  formatStyle(
+    "Renda média",
+    valueColumns= "cor_renda",
+    backgroundColor= JS("value")
+  ) %>%
+  formatStyle(
+    "Investimento médio",
+    valueColumns= "cor_inv",
+    backgroundColor= JS("value")
+  ) %>%
+  formatStyle(
+    "Saldo médio",
+    valueColumns= "cor_saldo",
+    backgroundColor= JS("value")
+  )
+})
+
+```
+
+# Mapa de risco
+
+## Input {.sidebar data-width="250"}
+
+```{r}
+wellPanel(checkboxGroupInput(
+  # Variável pra guardar o input
+    "prof4", # input$prof está com esse valor guardado
+    "Profissões:",
+    choices = sort(unique(dados_mapa$Profissao)),
+    selected = sort(unique(dados_mapa$Profissao))
+    ),
+
+checkboxGroupInput(
+    "endiv4",
+    "Endividamento:",
+    choices = c("Baixo", "Intermediario", "Alto"),
+    selected = c("Baixo", "Intermediario", "Alto")
+))
+```
+
+## Output {data-width="350"} {.tabset}
+
+### 🗺 Clientes por cidade e risco
+
+```{r mapa_risco, echo=FALSE}
+# Construir o mapa
+renderLeaflet({
+  dados_filtro = dados_mapa %>%
+  filter(
+    Profissao %in% input$prof4,
+    Endividamento %in% input$endiv4
+    )
+
+resumo_cidade = dados_filtro %>%
+  group_by(Cidade, lat, long) %>%
+  summarise(
+    clientes = n(),
+    pct_alto = length(Endividamento[Endividamento=="Alto"])/length(Endividamento) * 100,
+    renda_media = mean(Renda, na.rm = TRUE),
+    investimento_medio = mean(Investimento, na.rm = TRUE),
+    saldo_medio = mean(Saldo_Mensal, na.rm = TRUE),
+.groups = "drop"
+    )
+pal = colorNumeric(
+  palette = c("#2ecc71", "#f1c40f", "#e74c3c"),
+  domain = resumo_cidade$pct_alto
+  )
+leaflet(resumo_cidade) %>%
+  addProviderTiles("CartoDB.Positron") %>%
+  setView(lng = -47.0, lat = -15.0, zoom = 4) %>%
+  addCircleMarkers(
+    lng = ~long,
+    lat = ~lat,
+    radius = ~pmax(4, sqrt(clientes) * 2),
+    color = ~pal(pct_alto),
+    fillColor = ~pal(pct_alto),
+    fillOpacity = 0.8,
+    weight = 1,
+    popup = ~paste0(
+    "<b>Cidade:</b> ", Cidade, "<br>",
+    "<b>Clientes:</b> ", clientes, "<br>",
+    "<b>% Alto endividamento:</b> ", round(pct_alto, 1), "%<br>",
+    "<b>Renda média:</b> US$ ", comma(renda_media, accuracy = 0.01, big.mark = ".", decimal.mark = ","),
+    "<br>",
+    "<b>Investimento médio:</b> US$ ", comma(investimento_medio, accuracy = 0.01, big.mark = ".",
+decimal.mark = ","), "<br>",
+    "<b>Saldo médio:</b> US$ ", comma(saldo_medio, accuracy = 0.01, big.mark = ".", decimal.mark = ",")
+    )
+) %>%
+addLegend(
+  "bottomright",
+  pal = pal,
+  values = ~pct_alto,
+  title = "% alto endividamento",
+  opacity = 1
+  )
+})
+```

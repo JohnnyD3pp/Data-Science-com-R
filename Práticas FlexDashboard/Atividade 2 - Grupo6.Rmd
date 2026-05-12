@@ -1,0 +1,619 @@
+---
+title: "Dashboard - EdTech Analytics"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: fill
+    theme: lumen
+runtime: shiny
+---
+
+```{r ler_dados, include=FALSE}
+
+library(flexdashboard)
+library(shiny)
+library(tidyverse)
+library(DT)
+library(RColorBrewer)
+library(scales)
+library(plotly)
+library(leaflet)
+library(maps)
+library(readxl)
+
+# --------------------------------------------------------------------------
+# O dashboard foi organizado em quatro páginas de forma progressiva. A primeira apresenta os KPIs gerais da plataforma (usuários, conclusão média, avaliação e engajamento em discussões). A segunda aprofunda a análise com gráficos sobre perfil dos usuários, conclusão das aulas e relação entre conclusão e avaliação. A terceira exibe um mapa interativo com Leaflet mostrando a distribuição geográfica dos usuários por cidade, com cores e tamanhos representando métricas de engajamento. A quarta página traz um detalhamento comparativo por tipo de aula, com tabela resumo colorida e gráficos de discussões. Todas as páginas possuem filtros interativos por gênero, tipo de aula, escolaridade e cidade.
+# --------------------------------------------------------------------------
+
+# -------------------------------------------------------
+# LEITURA DOS DADOS
+# Ajuste o caminho conforme necessário
+# -------------------------------------------------------
+setwd("C:/Users/kayla.abreu/OneDrive - ESPM/Documentos/Base de Dados CDD")
+dados = read_xlsx("Atividade 2 - v6.xlsx")
+
+# Remove linhas com NA nas colunas essenciais
+dados_drop = dados %>% drop_na(avg_rating)
+dados_drop2 = drop_na(dados)
+
+# -------------------------------------------------------
+# PRÉ-PROCESSAMENTO PARA O MAPA
+# Usa as coordenadas já presentes na base (lat, long, pop)
+# Agrega por cidade para o mapa
+# -------------------------------------------------------
+dados_mapa_base = dados %>%
+  filter(!is.na(lat), !is.na(long), !is.na(current_city)) %>%
+  group_by(current_city, lat, long) %>%
+  summarise(
+    usuarios        = n_distinct(user_id),
+    conclusao_media = mean(overall_completion_percentage, na.rm = TRUE),
+    avaliacao_media = mean(avg_rating, na.rm = TRUE),
+    discussoes_media = mean(n_discussions, na.rm = TRUE),
+    pop             = first(pop),
+    .groups = "drop"
+  )
+
+```
+
+<!-- PÁGINA 1 - KPIs / VISÃO GERAL                      -->
+
+# Visão Geral {data-orientation="rows"}
+
+## Input {.sidebar data-width="250"}
+
+```{r sidebar_p1, echo=FALSE}
+wellPanel(
+  
+  checkboxGroupInput(
+    "genero",
+    "Gênero:",
+    choices  = sort(na.omit(unique(dados$gender))),
+    selected = sort(na.omit(unique(dados$gender)))
+  ),
+
+  checkboxGroupInput(
+    "tipo_aula",
+    "Tipo de Aula:",
+    choices  = sort(na.omit(unique(dados$lesson_type))),
+    selected = sort(na.omit(unique(dados$lesson_type)))
+  ),
+
+  checkboxGroupInput(
+    "escolaridade",
+    "Nível de Qualificação:",
+    choices  = sort(na.omit(unique(dados$highest_qualification))),
+    selected = sort(na.omit(unique(dados$highest_qualification)))
+  )
+)
+```
+
+## Row {data-height="180"}
+
+### Engajamento em Discussões (% de usuários que comentam)
+
+```{r kpi_engajamento, echo=FALSE}
+renderGauge({
+  filtro = dados %>%
+    filter(gender %in% input$genero,
+           lesson_type %in% input$tipo_aula,
+           highest_qualification %in% input$escolaridade) 
+
+  cont   = table(filtro$n_comments > 0)
+  porc   = round(prop.table(cont) * 100, 1)
+  valor  = as.numeric(porc["TRUE"])
+  if (is.na(valor)) valor = 0
+
+  gauge(
+    valor, min = 0, max = 100, symbol = "%",
+    gaugeSectors(
+      success = c(31, 100),
+      warning = c(16, 30),
+      danger  = c(0, 15),
+      colors  = c("green", "yellow", "red")
+    )
+  )
+})
+```
+
+## Row {data-width="650"} {data-height="500"}
+
+### Número Total de Usuários
+
+```{r kpi_usuario, echo=FALSE}
+# Fixo — total geral de usuários únicos
+renderValueBox({
+  filtro = dados %>%
+    filter(gender %in% input$genero,
+           lesson_type %in% input$tipo_aula,
+           highest_qualification %in% input$escolaridade)
+           
+  contagem = n_distinct(filtro$user_id)
+  valueBox(contagem, icon = "fa-circle-user", color = "lightblue")
+})
+
+```
+
+### Conclusão Média (%)
+
+```{r kpi_conclusao, echo=FALSE}
+
+renderValueBox({
+  filtro = dados %>%
+    filter(gender %in% input$genero,
+           lesson_type %in% input$tipo_aula,
+           highest_qualification %in% input$escolaridade)
+
+  media = round(mean(filtro$overall_completion_percentage, na.rm = TRUE), 2)
+  valueBox(paste0(media, "%"), icon = "fa-graduation-cap", color = "lightblue")
+})
+```
+
+## Row {data-width="650"}
+
+### Avaliação Média
+
+```{r kpi_avaliacao, echo=FALSE}
+renderValueBox({
+  filtro = dados_drop %>%
+    filter(gender %in% input$genero,
+           lesson_type %in% input$tipo_aula,
+           highest_qualification %in% input$escolaridade)
+
+  media = round(mean(filtro$avg_rating, na.rm = TRUE), 2)
+  valueBox(media, icon = "fa-star", color = "lightyellow")
+})
+```
+
+<!-- PÁGINA 2 - ENGAJAMENTO E APRENDIZADO               -->
+
+# Engajamento e Aprendizado {data-orientation="columns"}
+
+## Input {.sidebar data-width="250"}
+
+```{r sidebar_p2, echo=FALSE}
+wellPanel(
+
+  checkboxGroupInput(
+    "genero2",
+    "Gênero:",
+    choices  = sort(na.omit(unique(dados$gender))),
+    selected = sort(na.omit(unique(dados$gender)))
+  ),
+
+  checkboxGroupInput(
+    "tipo_aula2",
+    "Tipo de Aula:",
+    choices  = sort(na.omit(unique(dados$lesson_type))),
+    selected = sort(na.omit(unique(dados$lesson_type)))
+  ),
+
+  checkboxGroupInput(
+    "escolaridade2",
+    "Nível de Qualificação:",
+    choices  = sort(na.omit(unique(dados$highest_qualification))),
+    selected = sort(na.omit(unique(dados$highest_qualification)))
+  ),
+
+  checkboxGroupInput(
+    "cidade2",
+    "Cidade:",
+    choices  = sort(na.omit(unique(dados$current_city))),
+    selected = sort(na.omit(unique(dados$current_city)))
+  )
+)
+```
+
+## Output {data-width="600"} {.tabset}
+
+### Conclusão x Avaliação
+
+```{r grafico_conclusao_avaliacao, echo=FALSE}
+renderPlot({
+  filtro = dados %>%
+    filter(gender %in% input$genero2,
+           lesson_type %in% input$tipo_aula2,
+           highest_qualification %in% input$escolaridade2,
+           current_city %in% input$cidade2)
+
+  dados_user = filtro %>%
+    group_by(user_id) %>%
+    summarise(
+      conclusao = mean(overall_completion_percentage, na.rm = TRUE),
+      avaliacao = mean(avg_rating, na.rm = TRUE),
+      .groups   = "drop"
+    )
+
+  ggplot(dados_user, aes(x = conclusao, y = avaliacao)) +
+    geom_point(color = "steelblue", alpha = 0.5) +
+    geom_smooth(method = "lm", se = FALSE, color = "darkblue") +
+    labs(title = "Relação entre Conclusão e Avaliação",
+         x = "Conclusão Geral (%)", y = "Avaliação Média") +
+    theme_minimal()
+})
+```
+
+### Distribuição por Escolaridade
+
+```{r grafico_escolaridade, echo=FALSE}
+renderPlot({
+  filtro = dados %>%
+  filter(gender %in% input$genero2,
+         lesson_type %in% input$tipo_aula2,
+         highest_qualification %in% input$escolaridade2,
+         current_city %in% input$cidade2) %>% 
+  mutate(highest_qualification = factor(highest_qualification, 
+                                        levels = c("10th Completed", "Degree", "Intermediate", "B.Tech", "M.Tech"))) %>%
+  group_by(user_id) %>% 
+  summarise(escolaridade = first(highest_qualification)) %>% 
+  ungroup()
+  
+  ggplot(filtro, aes(x = escolaridade, fill = escolaridade)) +
+    geom_bar() +
+    labs(title = "Distribuição por Nível de Qualificação",
+         x = "Escolaridade", y = "Quantidade de usuários") +
+    guides(fill = "none") +
+    theme_minimal() +
+    theme(axis.text.x = element_text(angle = 20, hjust = 1))
+})
+```
+
+### Conclusão das Aulas
+
+```{r grafico_conclusao, echo=FALSE}
+renderPlot({
+  filtro = dados %>%
+    filter(gender %in% input$genero2,
+           lesson_type %in% input$tipo_aula2,
+           highest_qualification %in% input$escolaridade2,
+           current_city %in% input$cidade2) %>%
+    mutate(status_aula = ifelse(overall_completion_percentage >= 100, "Concluiu", "Não concluiu"))
+
+  ggplot(filtro, aes(x = status_aula, fill = status_aula)) +
+    geom_bar() +
+    scale_fill_manual(values = c("Concluiu" = "#2ecc71", "Não concluiu" = "#e74c3c")) +
+    labs(title = "Status de Conclusão das Aulas",
+         x = "Status", y = "Quantidade de aulas") +
+    guides(fill = "none") +
+    theme_minimal()
+})
+```
+
+### Avaliação x Duração da Aula (Interativo)
+
+```{r grafico_plotly, echo=FALSE}
+renderPlotly({
+  filtro = dados_drop2 %>%
+    filter(lesson_type %in% input$tipo_aula2,
+           highest_qualification %in% input$escolaridade2,
+           current_city %in% input$cidade2)
+
+  p = ggplot(filtro, aes(
+    x    = lesson_duration_in_mins,
+    y    = avg_rating,
+    color = lesson_type,
+    text = paste0(
+      "Duração: ", lesson_duration_in_mins, " min<br>",
+      "Avaliação: ", avg_rating, "<br>",
+      "Tipo: ", lesson_type
+    )
+  )) +
+    geom_point(alpha = 0.6) +
+    labs(title = "Avaliação x Duração da Aula",
+         x = "Duração (min)", y = "Avaliação Média",
+         color = "Tipo de Aula") +
+    theme_minimal() 
+
+  ggplotly(p, tooltip = "text")
+})
+```
+
+### Distribuição por Gênero
+
+```{r grafico_genero, echo=FALSE}
+renderPlot({
+  filtro = dados %>%
+    filter(gender %in% input$genero2,
+           lesson_type %in% input$tipo_aula2,
+           highest_qualification %in% input$escolaridade2,
+           current_city %in% input$cidade2)
+
+  filtro %>%
+    distinct(user_id, gender) %>%
+    count(gender) %>%
+    mutate(perc = n / sum(n),
+           label = scales::percent(perc)) %>%
+    ggplot(aes(x = "", y = n, fill = gender)) +
+    geom_col(width = 1, color = "white") +
+    geom_text(aes(label = label), 
+              position = position_stack(vjust = 0.5)) +
+    coord_polar(theta = "y") +
+    labs(title = "Distribuição de Usuários por Gênero", fill = "Gênero") +
+    theme_void()
+})
+```
+
+<!-- PÁGINA 3 - GEOLOCALIZAÇÃO                          -->
+
+# Geolocalização {data-orientation="columns"}
+
+## Input {.sidebar data-width="250"}
+
+```{r sidebar_p3, echo=FALSE}
+wellPanel(
+
+  checkboxGroupInput(
+    "genero3",
+    "Gênero:",
+    choices  = sort(na.omit(unique(dados$gender))),
+    selected = sort(na.omit(unique(dados$gender)))
+  ),
+
+  checkboxGroupInput(
+    "tipo_aula3",
+    "Tipo de Aula:",
+    choices  = sort(na.omit(unique(dados$lesson_type))),
+    selected = sort(na.omit(unique(dados$lesson_type)))
+  ),
+
+  checkboxGroupInput(
+    "escolaridade3",
+    "Nível de Qualificação:",
+    choices  = sort(na.omit(unique(dados$highest_qualification))),
+    selected = sort(na.omit(unique(dados$highest_qualification)))
+  ),
+
+  radioButtons(
+    "cor_mapa",
+    "Colorir pontos por:",
+    choices  = c("Conclusão Média" = "conclusao_media",
+                 "Avaliação Média" = "avaliacao_media",
+                 "Discussões Médias" = "discussoes_media"),
+    selected = "conclusao_media"
+  )
+)
+```
+
+## Output {data-width="750"}
+
+### Usuários por Cidade
+
+```{r mapa_leaflet, echo=FALSE}
+renderLeaflet({
+  # Filtra base original de acordo com os inputs
+  filtro = dados %>%
+    filter(!is.na(lat), !is.na(long), !is.na(current_city),
+           gender %in% input$genero3,
+           lesson_type %in% input$tipo_aula3,
+           highest_qualification %in% input$escolaridade3)
+
+  # Agrega por cidade
+  resumo_cidade = filtro %>%
+    group_by(current_city, lat, long) %>%
+    summarise(
+      usuarios         = n_distinct(user_id),
+      conclusao_media  = round(mean(overall_completion_percentage, na.rm = TRUE), 1),
+      avaliacao_media  = round(mean(avg_rating, na.rm = TRUE), 2),
+      discussoes_media = round(mean(n_discussions, na.rm = TRUE), 2),
+      .groups = "drop"
+    )
+
+  # Variável selecionada para colorir
+  var_cor = input$cor_mapa
+  valores = resumo_cidade[[var_cor]]
+
+  pal = colorNumeric(
+    palette = c("#e74c3c", "#f1c40f", "#2ecc71"),
+    domain  = valores
+  )
+
+  legenda_titulo = switch(var_cor,
+    conclusao_media  = "Conclusão Média (%)",
+    avaliacao_media  = "Avaliação Média",
+    discussoes_media = "Discussões Médias"
+  )
+
+  leaflet(resumo_cidade) %>%
+    addProviderTiles("CartoDB.Positron") %>%
+    addCircleMarkers(
+      lng         = ~long,
+      lat         = ~lat,
+      radius      = ~pmax(5, sqrt(usuarios) * 3),
+      color       = ~pal(valores),
+      fillColor   = ~pal(valores),
+      fillOpacity = 0.8,
+      weight      = 1,
+      popup = ~paste0(
+        "<b>Cidade:</b> ", current_city, "<br>",
+        "<b>Usuários únicos:</b> ", usuarios, "<br>",
+        "<b>Conclusão média:</b> ", conclusao_media, "%<br>",
+        "<b>Avaliação média:</b> ", avaliacao_media, "<br>",
+        "<b>Discussões médias:</b> ", discussoes_media
+      )
+    ) %>%
+    addLegend(
+      "bottomright",
+      pal    = pal,
+      values = valores,
+      title  = legenda_titulo,
+      opacity = 1
+    )
+})
+```
+
+<!-- PÁGINA 4 - DETALHAMENTO                            -->
+
+# Detalhamento {data-orientation="columns"}
+
+## Input {.sidebar data-width="250"}
+
+```{r sidebar_p4, echo=FALSE}
+wellPanel(
+
+  checkboxGroupInput(
+    "genero4",
+    "Gênero:",
+    choices  = sort(na.omit(unique(dados$gender))),
+    selected = sort(na.omit(unique(dados$gender)))
+  ),
+
+  checkboxGroupInput(
+    "tipo_aula4",
+    "Tipo de Aula:",
+    choices  = sort(na.omit(unique(dados$lesson_type))),
+    selected = sort(na.omit(unique(dados$lesson_type)))
+  ),
+
+  checkboxGroupInput(
+    "escolaridade4",
+    "Nível de Qualificação:",
+    choices  = sort(na.omit(unique(dados$highest_qualification))),
+    selected = sort(na.omit(unique(dados$highest_qualification)))
+  ),
+
+  checkboxGroupInput(
+    "cidade4",
+    "Cidade:",
+    choices  = sort(na.omit(unique(dados$current_city))),
+    selected = sort(na.omit(unique(dados$current_city)))
+  )
+)
+```
+
+## Output {data-width="700"} {.tabset}
+
+### Tabela Resumo por Tipo de Aula
+
+```{r tabela_resumo, echo=FALSE}
+renderDT({
+  filtro = dados %>%
+    filter(gender %in% input$genero4,
+           lesson_type %in% input$tipo_aula4,
+           highest_qualification %in% input$escolaridade4,
+           current_city %in% input$cidade4)
+
+  tabela = filtro %>%
+    group_by(lesson_type) %>%
+    summarise(
+      `Usuários`           = n_distinct(user_id),
+      `Conclusão média`    = mean(overall_completion_percentage, na.rm = TRUE),
+      `Avaliação média`    = mean(avg_rating, na.rm = TRUE),
+      `Comentários médios` = mean(n_comments, na.rm = TRUE),
+      `Discussões médias`  = mean(n_discussions, na.rm = TRUE),
+      .groups = "drop"
+    ) %>%
+    mutate(
+      cor_conclusao = case_when(
+        `Conclusão média` == max(`Conclusão média`, na.rm = TRUE) ~ "#d4edda",
+        `Conclusão média` == min(`Conclusão média`, na.rm = TRUE) ~ "#f8d7da",
+        TRUE ~ "white"
+      ),
+      cor_avaliacao = case_when(
+        `Avaliação média` == max(`Avaliação média`, na.rm = TRUE) ~ "#d4edda",
+        `Avaliação média` == min(`Avaliação média`, na.rm = TRUE) ~ "#f8d7da",
+        TRUE ~ "white"
+      ),
+      cor_comentarios = case_when(
+        `Comentários médios` == max(`Comentários médios`, na.rm = TRUE) ~ "#d4edda",
+        `Comentários médios` == min(`Comentários médios`, na.rm = TRUE) ~ "#f8d7da",
+        TRUE ~ "white"
+      ),
+      cor_discussoes = case_when(
+        `Discussões médias` == max(`Discussões médias`, na.rm = TRUE) ~ "#d4edda",
+        `Discussões médias` == min(`Discussões médias`, na.rm = TRUE) ~ "#f8d7da",
+        TRUE ~ "white"
+      )
+    )
+
+  datatable(
+    tabela,
+    caption  = "Resumo por tipo de aula (verde = maior | vermelho = menor)",
+    rownames = FALSE,
+    options  = list(
+      pageLength    = 10,
+      dom           = "tip",
+      columnDefs    = list(
+        list(className = "dt-center", targets = "_all"),
+        list(visible = FALSE, targets = 6:9)   # esconde colunas de cor
+      )
+    )
+  ) %>%
+    formatRound(
+      columns = c("Conclusão média", "Avaliação média",
+                  "Comentários médios", "Discussões médias"),
+      digits  = 2
+    ) %>%
+    formatStyle("Conclusão média",
+      valueColumns = "cor_conclusao", backgroundColor = JS("value")) %>%
+    formatStyle("Avaliação média",
+      valueColumns = "cor_avaliacao", backgroundColor = JS("value")) %>%
+    formatStyle("Comentários médios",
+      valueColumns = "cor_comentarios", backgroundColor = JS("value")) %>%
+    formatStyle("Discussões médias",
+      valueColumns = "cor_discussoes", backgroundColor = JS("value"))
+})
+```
+
+### Comparativo: Conclusão por Escolaridade e Tipo
+
+```{r grafico_comparativo, echo=FALSE}
+renderPlotly({
+  filtro = dados %>%
+    filter(gender %in% input$genero4,
+           lesson_type %in% input$tipo_aula4,
+           highest_qualification %in% input$escolaridade4,
+           current_city %in% input$cidade4) %>% 
+    mutate(highest_qualification = factor(highest_qualification, levels = c("10th Completed", "Degree", "Intermediate", "B.Tech", "M.Tech")))
+
+  resumo = filtro %>%
+    group_by(highest_qualification, lesson_type) %>%
+    summarise(
+      conclusao = mean(overall_completion_percentage, na.rm = TRUE),
+      .groups   = "drop"
+    )
+
+  p = ggplot(resumo, aes(
+    x    = highest_qualification,
+    y    = conclusao,
+    fill = lesson_type,
+    text = paste0("Escolaridade: ", highest_qualification,
+                  "<br>Tipo: ", lesson_type,
+                  "<br>Conclusão média: ", round(conclusao, 1), "%")
+  )) +
+    geom_col(position = "dodge") +
+    labs(title = "Conclusão Média por Escolaridade e Tipo de Aula",
+         x = "Escolaridade", y = "Conclusão Média (%)",
+         fill = "Tipo de Aula") +
+    theme_minimal() +
+    theme(axis.text.x = element_text(angle = 20, hjust = 1))
+
+  ggplotly(p, tooltip = "text")
+})
+```
+
+### Discussões e Comentários por Tipo de Aula
+
+```{r grafico_discussoes, echo=FALSE}
+renderPlot({
+  filtro = dados %>%
+    filter(gender %in% input$genero4,
+           lesson_type %in% input$tipo_aula4,
+           highest_qualification %in% input$escolaridade4,
+           current_city %in% input$cidade4)
+
+  filtro %>%
+    pivot_longer(cols = c(n_discussions, n_comments),
+                 names_to = "metrica", values_to = "valor") %>%
+    mutate(metrica = recode(metrica,
+      n_discussions = "Discussões",
+      n_comments    = "Comentários"
+    )) %>%
+    group_by(lesson_type, metrica) %>%
+    summarise(media = mean(valor, na.rm = TRUE), .groups = "drop") %>%
+    ggplot(aes(x = lesson_type, y = media, fill = metrica)) +
+    geom_col(position = "dodge") +
+    scale_fill_brewer(palette = "Set2") +
+    labs(title = "Média de Discussões e Comentários por Tipo de Aula",
+         x = "Tipo de Aula", y = "Média", fill = "") +
+    theme_minimal()
+})
+```

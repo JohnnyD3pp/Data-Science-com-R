@@ -1,0 +1,133 @@
+---
+title: "Gestão de Risco"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: rows
+    vertical_layout: fill
+---
+
+```{r ler_dados, include=FALSE}
+
+setwd("C:/Users/kayla.abreu/OneDrive - ESPM/Documentos/Base de Dados CDD")
+library(readxl)
+dados = read_xlsx("Aula 05.xlsx")
+
+library(flexdashboard)
+library(tidyverse)
+library(RColorBrewer)
+library(scales)
+library(plotly)
+library(shiny)
+```
+
+## Row {data-width="650"}
+
+### Percentual de Alto Endividamento
+
+```{r Percentual_alto_endiv, echo=FALSE}
+
+contagem = table(dados$Endividamento)
+Endividamentos =round(prop.table(contagem)*100, 2)
+
+# Pega só o número na filtragem (% Dos maiores em divida)
+Alto_Endividamento= as.numeric(Endividamentos["Alto"])
+
+```
+
+```{r velocimetro_endiv, echo=FALSE}
+
+gauge(Alto_Endividamento,min=0,max=100,symbol="%",gaugeSectors(success=c(0,15),warning=c(16,30),danger=c(31,100),colors = c("green", "yellow", "red")))
+
+# Verde para tudo bem, amarelo para atenção e vermelho para alerta
+
+```
+
+### Investimento Médio
+
+```{r invest_medio, echo=FALSE}
+
+# Média dos investimentos
+# Mas somente a média dos clientes altamente endividados
+
+dados_alto = filter(dados, Endividamento == "Alto")
+Investimento_Medio = round(mean(dados_alto$Investimento),2)
+
+Investimento_Medio=dollar(Investimento_Medio,prefix= "US$ ",big.mark= ".",decimal.mark= ",",accuracy=0.01)
+
+# É necessário sempre utilizar fa antes do ícone
+valueBox(Investimento_Medio, icon="fa-money-bill-trend-up", color="lightblue")
+
+```
+
+### Renda Média
+
+```{r renda_media, echo=FALSE}
+
+Renda_Media = round(mean(dados_alto$Renda), 2)
+
+Renda_Media=dollar(Renda_Media,prefix= "US$ ",big.mark= ".",decimal.mark= ",",accuracy=0.01)
+
+valueBox(Renda_Media, icon="fa-money-bill-1-wave", color="lightblue")
+
+```
+
+### Média de Empréstimos
+
+```{r media_emprest, echo=FALSE}
+
+Media_Emprestimo = round(mean(dados_alto$Emprestimos),0)
+
+valueBox(Media_Emprestimo, icon="fa-money-check-dollar", color="lightblue")
+
+```
+
+## Row {data-width="350"}
+
+### Endividamento x Profissão
+
+```{r grafico_endivXprof, echo=FALSE}
+
+# Ordenando os níveis de endividamento
+dados = dados %>%
+  mutate(Endividamento = factor(Endividamento, levels=c("Baixo", "Intermediario", "Alto")))
+
+# Proporção de profissão para nível de endividamento
+tabela_percent = dados %>%group_by(Profissao, Endividamento) %>%summarize(n = n()) %>%mutate(pct = n/sum(n),rotulo = scales::percent(pct))
+
+# Construção do gráfico de colunas empilhadas
+ggplot(tabela_percent, aes(x = Profissao, y=pct, fill = Endividamento)) +geom_bar(stat="identity",position = "fill") +scale_y_continuous(breaks = seq(0, 1, 0.2), labels =scales::percent_format()) +geom_text(aes(label = rotulo), size = 3, position = position_stack(vjust = 0.5)) +labs(x = "Profissão", y = "Endividamento")  + theme(axis.text.x = 
+element_text(hjust = 0.5, angle=40)) +scale_fill_brewer(palette="Set2",name="Nível de endividamento", labels=c("Baixo"="Baixo","Intermediario"="Intermediário", "Alto"="Alto"))
+
+```
+
+### Idade x Endividamento
+
+```{r grafico_idadeXendiv, echo=FALSE}
+
+ggplot(dados, aes(y = Idade, x= Endividamento, fill=Endividamento)) +
+geom_boxplot(color="black",outlier.color="hotpink") +labs(x = "Nível de Endividamento", y = "Idade") +scale_fill_brewer(palette="Pastel1") + guides(fill="none")
+
+
+```
+
+### Empréstimo x Saldo
+
+```{r grafico_empresXsaldo, echo=FALSE}
+
+# Temos que ajustar eixo X para números inteiros
+p = ggplot(dados, aes(y = Saldo_Mensal, x= Emprestimos, color = Endividamento, frame = Endividamento,
+text=paste(
+"<b>Empréstimos: </b>",Emprestimos,
+"<br><b>Saldo: </b>", dollar(Saldo_Mensal,
+prefix = "$",
+big.mark = ".",
+decimal.mark = ",",
+accuracy = 0.01),
+"<br><b>Endividamento: </b>", Endividamento)) ) +
+geom_point() + labs(x = "Empréstimos", y = "Saldo mensal US$") +
+scale_x_continuous(breaks = seq(min(dados$Emprestimos), max(dados$Emprestimos), 1)) +
+scale_y_continuous(labels = scales::dollar_format(prefix = "$", big.mark = ".",decimal.mark = ","))
+
+ggplotly(p, tooltip = "text") %>% layout(showlegend=FALSE)
+```
+
