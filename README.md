@@ -1,9 +1,3 @@
-Compreendo. Para garantir o máximo de profissionalismo e o funcionamento técnico dos links, ajustei a estrutura.
-
-Os links de arquivos no GitHub são sensíveis a caracteres especiais. Para a pasta PDF's RMarkDown, utilizei a codificação padrão %20 para espaços e %27 para o apóstrofo, garantindo que o navegador encontre o caminho correto. Além disso, incluí os novos arquivos de script (Introducao.R, Aula 01_02.R e Aula 06 - Exemplo shiny.R) com descrições técnicas de suas funcionalidades.  
-
-Abaixo, o conteúdo para o seu README.md:
-
 Portfólio de Ciência de Dados e Modelagem Estatística com R
 Este repositório reúne projetos desenvolvidos em linguagem R, focados na transposição de dados brutos para relatórios analíticos e dashboards interativos. O conteúdo abrange desde a manipulação de dados com o ecossistema Tidyverse até a implementação de modelos de regressão linear e interfaces dinâmicas em Shiny.
 
