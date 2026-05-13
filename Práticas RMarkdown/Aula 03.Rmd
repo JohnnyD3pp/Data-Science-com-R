@@ -1,0 +1,75 @@
+---
+title: "Aula 03 - Gráficos"
+author: "Johnny Depp"
+date: "2026-02-19"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Gráficos GGPLOT
+
+```{r leitura_dados, include=FALSE}
+library(tidyverse) # Ativar pacote tidyverse
+setwd("C:/Users/kayla.abreu/OneDrive - ESPM/Documentos/Base de Dados CDD")
+library(readxl)
+dados = read_xlsx("Aula 03.xlsx")
+```
+
+```{r ordenar, echo=FALSE}
+# Ordenar Dados ----
+
+dados1 = dados %>% mutate(Gasto=factor(Gasto,levels=c("Baixo_gasto","Alto_gasto"))) %>% mutate(Endividamento=factor(Endividamento,levels=c("Baixo", "Intermediario", "Alto")))
+
+# Importante: Ao usar piping ou qualquer função contínua, devemos fazer tudo em 'uma linha só', tirando enters não desejados
+```
+
+## Gráfico de colunas
+
+### Distribuição do gasto dos clientes
+
+```{r colunas_gasto, echo=FALSE}
+ggplot(dados1, aes(x = Gasto, fill = Gasto)) + geom_bar() + labs(title = 'Distribuição gasto dos clientes', x = 'Nível de gasto', y = 'Qtd de Clientes')
+
+# ggplot(nome_dataframe, aes(x = variavel_QUALI, fill=variavel_QUALI)) + geom_bar()+ labs(title = 'Título principal', x = 'Título do eixo X', y = 'Título do eixo Y')
+
+# Onde 'geom_bar' é o gráfico de colunas
+```
+
+### Retirando a caixa de legenda e adiconando um tema
+
+```{r colunas_gasto2, echo=FALSE}
+ggplot(dados1, aes(x = Gasto, fill = Gasto)) + geom_bar() + labs(title = 'Distribuição gasto dos clientes', x = 'Nível de gasto', y = 'Qtd de Clientes') + guides(fill='none') + theme_light()
+```
+
+## Gráfico de colunas decrescentes de acordo com a contagem / frequência
+
+```{r colunas_prof, echo=FALSE}
+ggplot(dados1, aes(x = forcats::fct_infreq(Profissao), fill=Profissao)) + geom_bar() + labs(title = "Distribuição das profissões", x = "Profissão", 
+y = "Qtd de Clientes") + guides(fill="none") + theme_light()
+
+# ggplot(nome_dataframe, aes(x = forcats::fct_infreq(variavel_QUALI),fill=variavel_QUALI)) + geom_bar() + labs(title = "Título principal", x = "Título do eixo X", y = "Título do eixo Y") + guides(fill="none")
+
+# Não podemos utilizar variáveis quanlitativa ordinais aqui
+```
+
+## Boxplot
+
+```{r boxplot, echo=FALSE}
+ggplot(dados1, aes(y = Saldo_Mensal)) + geom_boxplot(fill='lightblue', color='black')
+```
+
+### Adicionando formatações ao Boxplot
+
+```{r boxplot_2, echo=FALSE}
+ggplot(dados1, aes(y = Saldo_Mensal, x=1)) + geom_boxplot(fill='lightblue', color='black') + scale_x_continuous(breaks=NULL) + labs(title = 'Distribuição do saldo mensal', y = 'Saldo Mensal') + theme_light()
+```
+
+## Histograma
+
+```{r hist_investimento, echo=FALSE}
+ggplot(dados1, aes(x = Investimento)) + geom_histogram(fill='hotpink', color='white', binwidth=50) + labs(title = 'Investimento dos clientes', x = 'Valor mensal investido', y = 'Qtd de Clientes')
+```
+

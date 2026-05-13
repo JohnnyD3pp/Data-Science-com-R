@@ -1,0 +1,153 @@
+---
+title: "Atividade 1"
+author: "Ananditos - Grupo 6"
+date: "2026-03-03"
+output: pdf_document
+---
+
+```{r Atividade_1, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+options(scipen = 9999)
+```
+
+```{r leitura_dados, include=FALSE}
+library(tidyverse)
+setwd("C:/Users/kayla.abreu/OneDrive - ESPM/Documentos/Base de Dados CDD")
+library(readxl)
+dados = read_xlsx("Atividade 01.xlsx")
+library(RColorBrewer)
+Sys.setlocale("LC_ALL", "pt_BR.UTF-8")
+```
+
+```{r tempo_Fora_Empresa, echo = FALSE}
+# Crie uma nova coluna na base de dados chamada TempoForaEmpresa que apresente o total de anos de experiência profissional que foram fora da empresa atual (ou seja, é a diferença entre o total de anos de experiência e os anos na empresa atual).
+
+dados = dados %>% mutate(dados, TempoForaEmpresa = TotalWorkingYears - YearsAtCompany )
+View(dados)
+```
+
+```{r renda_Exp, echo = FALSE}
+# Crie uma nova coluna na base de dados chamada RendaExp que apresente a renda média anual por ano de experiência (será necessário transformar a renda mensal em anual antes de realizar a conta desta razão).
+# se o denominador = 0, deixar em branco, se não, faça a conta
+
+dados = dados %>% mutate(dados, RendaExp = if_else(TotalWorkingYears== 0, NA_real_,
+        (MonthlyIncome * 12) / TotalWorkingYears))
+```
+
+```{r treino_Ano, echo = FALSE}
+# Crie uma coluna nova na base de dados chamada TreinoAno que apresente a razão entre o número de treinamentos no último ano e os anos na empresa.
+
+dados = dados %>% mutate(dados, TreinoAno = if_else(YearsAtCompany== 0, NA_real_,
+        (TrainingTimesLastYear) / YearsAtCompany))
+```
+
+# Análises Gráficas:
+
+## Será que o departamento em que o funcionário trabalha na empresa conseguiria ajudar na previsão da saída da empresa?
+
+```{r grafico_deptoXsaida, echo = FALSE}
+ggplot(dados, aes(x = Department, fill = Attrition)) +
+geom_bar(position = "fill")+ labs(title = "Distribuição de Saída por departamento", x = "Departamento", y
+= "Percentual de Saída") + scale_fill_brewer(palette="Set2",name="Saída") + scale_y_continuous(breaks = seq(0, 1, 0.2),labels=scales::percent_format()) + theme_light()
+```
+
+O departamento influencia significativamente a taxa de retenção. Enquanto os departamentos de Vendas e de Pesquisa e Desenvolvimento apresentam taxas de saída semelhantes (em torno de 15%), o departamento de Recursos Humanos destoa, registrando uma taxa de saída próxima a 30%, o dobro dos demais.
+
+\newpage
+
+## Será que a frequência com que o funcionário viajou a trabalho no último ano conseguiria ajudar na previsão da saída da empresa?
+
+```{r ordenacao, echo = FALSE}
+dados = dados %>%
+mutate(BusinessTravel=factor(BusinessTravel,levels=c("Non-Travel","Travel_Rarely", "Travel_Frequently")))
+```
+
+```{r grafico_viagemXsaida, echo = FALSE}
+ggplot(dados, aes(x = BusinessTravel, fill = Attrition)) +
+geom_bar(position = "fill")+ labs(title = "Distribuição de Saída por viagem", x = "Viagem à trabalho", y
+= "Percentual de Saída") + scale_fill_brewer(palette="Set2",name="Saída") +  scale_y_continuous(breaks = seq(0, 1, 0.2),labels=scales::percent_format()) + theme_light()
+```
+
+A frequência de viagens a trabalho apresenta uma clara relação com a saída de funcionários. Apenas cerca de 8-10% dos funcionários que não viajam deixaram a empresa. Essa taxa sobe para aproximadamente 15% entre os que viajam raramente e atinge cerca de 25% entre os que viajam frequentemente, indicando que o desgaste das viagens pode ser um fator de evasão.
+
+\newpage
+
+## Será que a área de formação do funcionário conseguiria ajudar na previsão da saída da empresa?
+
+```{r grafico_formacaoXsaida, echo = FALSE}
+ggplot(dados, aes(x = EducationField, fill = Attrition)) +
+geom_bar(position = "fill")+ labs(title = "Distribuição de Saída por área de formação", x = "Área de formação", y
+= "Percentual de Saída") + scale_fill_brewer(palette="Set2",name="Saída") +  scale_y_continuous(breaks = seq(0, 1, 0.2),labels=scales::percent_format()) + theme_light() +
+  theme(axis.text.x= element_text(hjust = 1, size = 10, color
+= "black", angle=45))
+```
+
+A área de formação acadêmica impacta a retenção. Profissionais com formações Técnicas ou 'Outras' possuem as menores taxas de saída (abaixo de 15%). As taxas sobem levemente para formados em Medicina, Marketing e Ciências da Vida. O grande destaque negativo é para os formados em Recursos Humanos: aproximadamente 40% dos funcionários com essa formação deixaram a empresa, indicando uma alta dificuldade de retenção para este perfil específico.
+
+\newpage
+
+## Será que a renda média anual por ano de experiência conseguiria ajudar na previsão da saída da empresa?
+
+```{r grafico_rendaMXsaida, echo = FALSE, warning=FALSE}
+ggplot(dados, aes(x= RendaExp, fill=
+Attrition)) +
+geom_histogram(aes(y = after_stat(count) / tapply(after_stat(count), PANEL, 
+sum)[PANEL] * 100),color="black", bins=15) +
+facet_grid(Attrition ~.) + labs(title =
+"Distribuição da Renda Média Anual por saída", x = "Renda Média Anual", y = "Percentual de Saída") +
+scale_fill_brewer(palette="Set2") + guides(fill="none") + theme_light()
+```
+
+O gráfico demonstra uma assimetria à direita e, portanto, uma média maior que mediana. Além disso, podemos observar que a renda média não parece influenciar na saída ou não do funcionário, pois ambos os gráficos mostram que a maioria dos funcionários estão concentrados na faixa de 0 até 500 mil dólares e é notável que a maioria das demissões foi feita nessa faixa, logo, não podemos afirmar uma comprovação de correlação entre Renda Média Anual e sua demissão.
+
+\newpage
+
+## Será que o número de anos trabalhando com o gerente atual conseguiria ajudar na previsão da saída da empresa?
+
+```{r grafico_anosGerenteXsaida, echo = FALSE}
+ggplot(dados, aes(y = YearsWithCurrManager, x= Attrition, fill=
+Attrition)) + geom_boxplot(color="black",outlier.color="black") + labs(title =
+"Distribuição do tempo trabalhando com o gerente atual por saída", x = "Saída", y = "Anos com o gerente atual") +
+scale_fill_brewer(palette="Set2") + guides(fill="none") + theme_light()
+
+```
+
+Observa-se que funcionários que saíram da empresa tendem a ter menos tempo de trabalho com seu gerente atual. A mediana de tempo com o gerente para quem saiu é de apenas 2 anos, enquanto a mediana para quem permaneceu é de 3 anos. Além disso, 75% das pessoas que saíram ficaram no máximo 5 anos sob a mesma gerência, indicando que a falta de vínculo prolongado com a liderança pode facilitar a saída. Portanto, podemos afirmar que o fator "Anos com o gerente" influência moderadamente na saída do funcionário, entretanto, existe outros fatores que influenciam nessa tomada de decisão.
+
+\newpage
+
+## Será que a distância de casa até o trabalho conseguiria ajudar na previsão da saída da empresa?
+
+```{r grafico_kmCasaXsaida, echo = FALSE}
+#Construa mais 2 gráficos para comparar os funcionários que saíram e os que não saíram da empresa no último ano com duas variáveis que ainda não tenham sido utilizadas nos gráficos anteriores e interprete- os.
+
+ggplot(dados, aes(x= DistanceFromHome, fill=
+Attrition)) +
+geom_histogram(aes(y = after_stat(count) / tapply(after_stat(count), PANEL, 
+sum)[PANEL] * 100),color="black", bins=10) +
+facet_grid(Attrition ~.) + labs(title =
+"Distribuição da distância por saída", x = "Distância de casa (km)", y = "Percentual de Saída") +
+scale_fill_brewer(palette="Set2") + guides(fill="none") + theme_light()
+```
+
+Ao analisar a proporção das barras, percebe-se que as distribuições de distância até o trabalho são bastante semelhantes para ambos os grupos (quem saiu e quem ficou). Portanto, não é possível afirmar, apenas por esta visualização, que a distância seja um fator determinante ou que possua forte correlação com a saída da empresa.
+
+\newpage
+
+## Será que a idade do funcionário conseguiria ajudar na previsão da saída da empresa?
+
+```{r grafico_idadeXsaida, echo = FALSE}
+ggplot(dados, aes(y = Age, x= Attrition, fill=
+Attrition)) + geom_boxplot(color="black",outlier.color="black") + labs(title =
+"Distribuição da Idade por saída", x = "Saída", y = "Idade") +
+scale_fill_brewer(palette="Set2") + guides(fill="none") + theme_light()
+
+```
+
+Vemos que 50% dos funcionários que não saíram possuem mais de 35 anos, enquanto 50% dos que saíram, tem mais de 30. Portanto, funcionários mais jovens têm uma tendência maior a deixar a empresa, mas como há uma sobreposição de caixa entre eles, existe outros fatores mais relevantes que contribuem para saída ou permanência dele na empresa.
+
+# Conclusão Final
+
+A análise dos dados revela que o departamento e a frequência de viagens são os principais impulsionadores da rotatividade na empresa. O setor de Recursos Humanos se destaca negativamente, apresentando um número de saídas que é quase o dobro em comparação aos departamentos de Vendas e de Pesquisa e Desenvolvimento. Esse cenário de instabilidade é ainda mais acentuado ao observarmos a área de formação, já que aproximadamente 40% dos profissionais com formação acadêmica em Recursos Humanos acabam deixando a organização.
+
+Além disso, a evasão está fortemente associada à rotina de viagens a trabalho, enquanto menos de 10% dos funcionários que não viajam deixam a empresa, esse índice sobe para mais de 20% entre os que viajam frequentemente, representando mais que o dobro de evasão do grupo fixo. Em contrapartida, fatores demográficos e de relacionamento, como a idade do colaborador e o tempo trabalhando com o gerente atual, mostraram um impacto mais sutil na decisão de saída , dividindo espaço com variáveis como renda média anual e distância de casa, que não se mostraram preditores relevantes para o *turnover* nesta amostra.

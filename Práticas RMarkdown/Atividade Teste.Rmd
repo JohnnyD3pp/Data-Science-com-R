@@ -1,0 +1,81 @@
+---
+title: "Teste"
+author: "Johnny Depp"
+date: "2026-03-10"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Atividade 1 - Grupo 1
+
+```{r ler_dados, include=FALSE}
+
+library(tidyverse)
+setwd("C:/Users/kayla.abreu/OneDrive - ESPM/Documentos/Base de Dados CDD")
+library(readxl)
+dados = read_xlsx("Atividade 1 - Grupo1.xlsx")
+library(RColorBrewer)
+```
+
+```{r inadimplente, echo=FALSE}
+
+# Criando uma nova variável com novos nomes
+Inadimplente = recode(dados$Default,'1'='Sim','0'='Não')
+
+# Adicionando essa variável como uma nova coluna
+dados = mutate(dados, Inadimplente)
+
+# Uma forma mais direta de fazer isso seria:
+# dados = mutate(dados, inadimplente = recode(Default, '1' = 'Sim', '2' = 'Não'))
+
+# Deletando (opcional) a variável usada
+rm(Inadimplente)
+```
+
+```{r v_mensal_divida, echo=FALSE}
+
+# Crie uma nova coluna na base de dados chamada MonthLoan que apresente o valor mensal da dívida
+
+dados = dados %>%
+mutate(
+MonthLoan = if_else(
+LoanTerm == 0,
+NA_real_,
+LoanAmount / LoanTerm
+))
+```
+
+```{r v_mensal_renda, echo=FALSE}
+
+# Crie uma nova coluna na base de dados chamada MonthIncome que apresente o valor mensal da renda
+
+dados = mutate(dados, MonthIncome = Income / 12)
+```
+
+```{r v_proporcao_divm_rendm, echo=FALSE}
+
+# Crie uma coluna nova na base de dados chamada PropLoan que apresente a proporção que a dívida mensal representa da renda mensal do tomador do empréstimo
+
+dados = mutate(dados, PropLan = MonthLoan / MonthIncome)
+```
+
+## Será que a escolaridade do tomador do empréstimo conseguiria ajudar na previsão da inadimplência?
+
+```{r escolaridadexinadimplencia, echo=FALSE}
+
+# Ordenando a variável de escolaridade
+dados$Education=factor(dados$Education,levels=c("High School","Bachelor's","Master's", "PhD"))
+
+# unique(dados$Education) Ver dados de Education
+
+# Fazendo o percentual para usar as % no gráfico
+tabela_percent = dados %>% group_by(Education, Inadimplente)  %>%   summarize(n = n())  %>%   mutate(pct = n/sum(n), rotulo = scales::percent(pct))
+
+# Para responder a esssa pergunta, construa um gráfico que apresente a distribuição de inadimplência ou não para cada nível de escolaridade. Interprete-o.
+
+ggplot(tabela_percent, aes(x = Education, y=pct, fill = Inadimplente)) + geom_bar(stat="identity",position = "fill") + scale_y_continuous(breaks = seq(0, 1, 0.2), labels = scales::percent_format()) + scale_x_discrete(labels=c("High School"="Ensino médio","Bachelor's"="Bacharel", "Master's"="Mestre", "PhD" = "Doutor"))+ geom_text(aes(label = rotulo), size = 3, position = position_stack(vjust = 0.5)) + labs(title = "Distribuição de inadimplência ou não para cada nível de escolaridade", x = "Escolaridade", y = "Percentual de Inadimplência") + theme(plot.title = element_text(size = 10)) + scale_fill_brewer(palette="Set2",name="Inadimplente")
+```
+

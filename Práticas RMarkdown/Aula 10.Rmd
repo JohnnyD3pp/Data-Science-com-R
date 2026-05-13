@@ -1,0 +1,294 @@
+---
+title: "Aula_10"
+author: "Johnny Depp"
+date: "2026-05-05"
+output: pdf_document
+---
+
+```{r ler_dados, include=FALSE}
+
+library(flexdashboard)
+library(readxl)
+library(shiny)
+library(tidyverse)
+library(DT)
+library(RColorBrewer)
+library(scales)
+library(plotly)
+library(ggplot2)
+library(knitr) # Permite tabelas formatadas
+
+setwd("C:/Users/kayla.abreu/OneDrive - ESPM/Documentos/Base de Dados CDD")
+
+dados = read_xlsx("TV.xlsx")
+
+```
+
+# Regressão Linear Simples
+
+## Etapa 1 - O que queremos?
+
+a)  Construa o diagrama de dispersão entre SAC (complaint handling) e confiança (trust), ou seja, para verificar se a nota dada ao SAC influencia a nota de confiança.
+b)  Calcule a correlação e analise-a.
+c)  Encontre a equação de regressão e interprete os coeficientes da equação da reta no contexto do problema.
+d)  Estime a confiança de um consumidor que dá nota 2 ao serviço de atendimento ao consumidor.
+
+### Queremos saber se: a nota dada ao SAC Influencia a nota de confiança
+
+Portanto:
+
+-   X: Sac (Variável explicativa)
+
+-   Y: Confiança (Variável resposta)
+
+Variável X --\> A variável explicativa (y acontece por causa de X?), independente
+
+Variável Y --\> Variável resposta (x explica o comportamento de y?), dependente
+
+### Intensidade (força) da relação linear entre duas variáveis quantitativas --\> -1 \<= r \>= 1
+
+### Mede a força da relação LINEAR entre as variáveis quantitativas
+
+Casos particulares:
+
+-   r = 1 –\> associação linear positiva e perfeita
+
+-   r = -1 –\> associação linear negativa e perfeita
+
+-   r = 0 –\> inexistência de associação linear
+
+## Anotações importantes
+
+Coeficiente da correlação linear:
+
+-   Quanto mais próximo de 1 –\> associação mais forte
+
+-   Quanto mais próximo de 0 –\> associação mais fraca
+
+-   Exatamente 1 --\> associação propocional perfeita
+
+-   Exatamente -1 --\> associação inversamente proporcional perfeita
+
+### Será que a nota do sac implica na nota de confiança?
+
+```{r SACxConfianca, echo=FALSE, message=FALSE}
+
+# Message=false tira a mensagem chata que aparece
+
+ggplot(dados, aes(y = CONFIANCA, x=
+SAC)) + geom_point(color="black") + labs(title = "Sac X Confiança", x = "Nota do SAC", y = "Nota de confiança") +
+geom_smooth(method="lm",se=FALSE,color="hotpink")
+
+```
+
+```{r calculo_sacxConfianca, echo=FALSE}
+
+# Calcular o coeficiente da correlação linear
+cat("A correlação entre a nota do SAC e nota de confiança é:",round(cor(dados$SAC,dados$CONFIANCA),2))
+
+# Cat é o comando para concatenar, ou seja, essa mensagem vai aparecer antes do resultado no nosso documento PDF.
+```
+
+## Conclusão/Interpretação:
+
+Podemos observar que quanto maior a nota dada ao SAC da empresa de TV, maior tende a ser a nota de confiança dada à empresa, porém, essa associação entre as notas é moderada (correlação = 0,56).
+
+**Observação**: Para avaliar a intensidade da associação entre 2 variáveis quantitativas, vamos utilizar os seguintes limites para os valores da correlação:
+
+$0\leq |Correl| < 0,30$: Associação Linear Fraca
+
+$0,30\leq |Correl| < 0,70$: Associação Linear Moderada
+
+$0,70\leq |Correl| \leq 1$: Associação Linear Forte
+
+Ou seja:
+
+-   Resultados menor do que 0,30 irão indicar uma associação linear fraca
+
+-   Resultados entre 0,30 e 0,70 irão indicar uma associação linear moderada
+
+-   Resultados entre 0,70 e 1 irão indicar uma associação linear forte
+
+## Etapa 2 (Inferencial) - Teste de hipóteses
+
+```{r teste, echo=FALSE}
+
+# Confint - Intervalod de confiança
+# Kable - Table do pacote knitr, para formatar a tabela bonitinho! E podemos por um nome nessa tabela
+
+modelo = lm(CONFIANCA ~ SAC, data= dados)
+
+resumo = summary(modelo)
+
+tabela1 = round(resumo$coefficients,2) # guarda os coeficientes apenas com duas casas decimais
+
+tabela2 = round(confint(modelo, level = 0.95),2) # guarda o LI e LS com 95% de confiança para os coeficientes apenas com duas casas decimais
+
+kable(tabela1,caption="Estimativa dos coeficientes e teste de hipóteses") # formata a tabela 1 e adiciona um título (caption)
+
+kable(tabela2,caption="Intervalo de confiança dos coeficientes") # formata a tabela 2 e adiciona um título (caption)
+
+```
+
+A equação estimada de nota de confiança em função da nota dada ao SAC é:
+
+$$
+CONFIANÇA = 1,40 + 0,59 SAC
+$$
+
+Conseguimos essa equação ao substituir a fórmula original, que é:
+
+$$
+Y (estimado) = B0 (CL - Estimado) + B1 (CA - Estimado) X
+$$
+
+Onde:
+
+B0 –\> Coeficiente linear estimado (também chamado de intercepto)
+
+B1 –\> Coeficiente angular estimado
+
+Y/X –\> Eixo da tabela, aqui representados por confiança (eixo Y) e SAC (eixo X)
+
+Observação: Os parênteses são apenas para informar o que aquela variável significa, não é uma conta.
+
+## Minha Conclusão:
+
+### Primeiro teste de hipóteses
+
+Observação: Estamos fazendo o teste de hipótese do coeficiente angular, então estamos olhando a linha de baixo.
+
+### H0/Ha, Valor T e Valor P
+
+H0: B1 == 0 –\> Indica que a nota do SAC não influencia a nota de confiança
+
+Ha: B1 != 0 –\> Indica que a nota do SAC influencia a nota de confiança
+
+-   Rejeitar uma hipótese significa que ela não é válida. Por exemplo: Se rejeitamos $H_0$, isso indica que $B_1$ não é igual a 0. O que implica, neste caso, em dizer que $B_1$ influencia a nota de confiança.
+
+T value = B1 / Erro Padrão (Std. Error)
+
+-   O que se torna: 0,59 / 0,06 (no nosso caso)
+
+O valor - P (Valor P) sempre calculará a probabilidade, ele nos diz se nós podemos rejeitar ou não H0. Comparamos essa probabilidade resultante com 5%, se estiver abaixo de 5% nós rejeitamos, caso contrário, não rejeitamos H0.
+
+Essa probabilidade calculada não está multiplicada por 100, então, se for 3%, aparecerá como 0,03 na tabela
+
+Quanto menor for o valor P (Pr(\>\|t\|)), maior é a probabilidade de se rejeitar H0!
+
+### Alfa
+
+Alfa ($\alpha$) –\> Nível de significância ("O erro máximo permitido)
+
+O alfa é calculado do seguinte modo:
+
+-   Alfa = 100% - Nível de confiança (que no nosso caso é 95%)
+
+Observação: Escolhemos esse valor de 95%
+
+Se o valor - p for menor do que alfa –\> Temos evidências para rejeitar H0
+
+Se o valor - p for maior do que alfa –\> Não temos evidências para rejeitar H0
+
+### Conclusão do teste de hipóteses do coeficiente angular
+
+No nosso caso, Valor - P é menor do que alfa, ou seja, temos evidências para rejeitar H0, o que indica que:
+
+A nota do SAC influencia sim a nota de confiança.
+
+## Conclusão Professora (Mesmo assunto)
+
+Agora, precisamos verificar se a equação é válida para a população.
+
+Como a equação para a população seria:
+
+$$
+y=\beta_0+\beta_1x
+$$
+
+Precisamos testar primeiro $\beta_1$ para verificar se SAC influencia a nota de confiança.
+
+### Primeiro teste de hipóteses:
+
+$H_0: \beta_1 = 0$ (A nota dada ao SAC não influencia a nota de confiança)
+
+$H_a: \beta_1\neq0$ (A nota dada ao SAC influencia a nota de confiança)
+
+A estatística de teste $t$ divide a diferença da estimativa do coeficiente com o valor testado pelo erro padrão da estimativa:
+
+$$
+t=\frac{0,59 - 0}{0,06} = 10,06
+$$
+
+Para avaliar se essa estatística $t$ é grande ou não, calcula-se o $valor-p (Pr(>|t|))$.
+
+Regra de decisão:
+
+$valor-p \leq\alpha$: Temos evidências para rejeitar $H_0$
+
+$valor-p > \alpha$: Não temos evidências para rejeitar $H_0$
+
+Em que:
+
+$\alpha$: Nível de significância do teste ("erro máximo" permitido)
+
+-   100% - Nível de confiança
+
+Logo, para 95% de confiança, temos que:
+
+$valor-p = 0$ ($2^a$ linha da tabela 1) $< a = 0,05$, temos evidências para rejeitar $H_0$
+
+Portanto, com 95% de confiança, temos evidências de que a nota dada ao SAC influencia a nota de confiança.
+
+## Teste de hipótese 2
+
+Observação: Estamos fazendo o teste de hipótese do coeficiente linear, então estamos olhando a linha de cima.
+
+Só fazemos o teste do coeficiente linear quando rejeitamos $H_0$. Quando não rejeitamos $H_0$, nós já sabemos que X não influencia Y, logo não precisamos fazer o segundo teste de hipótese para o coeficiente linear
+
+Agora as hipóteses são:
+
+$H_0: \beta_0 = 0$ (A nota esperada de confiança é zero, se a nota dada ao SAC for zero)
+
+$H_a: \beta_0 \neq0$ (A nota esperada de confiaça é diferente de zero, se a nota dada ao SAC for zero)
+
+Observação: confiança citada neste documento é referente a variável, e não a confiança de modo literal.
+
+$valor-p$ $(1^a$ linha) = $0 < \alpha = 0,05$, então rejeita $H_0$. Portanto, com 95% de confiança, a nota esperada de CONFIANÇA da marca de TV é diferente de zero, mesmo que a nota dada ao SAC seja zero.
+
+Portanto, a equação é válida e podemos realizar a interpretação dos coeficientes estimados no contexto.
+
+# Interpretação dos Coeficientes
+
+A equação estimada era:
+
+$$
+CONFIANÇA = 1,40 + 0,59SAC
+$$
+
+-   1,40: Nota esperada de confiança da marca de TV quando a nota dada ao SAC for zero, podendo variar entre 1,04 e 1,76, com 95% de confiança.
+
+-   0,59: Acréscimo médio na nota de confiança da marca de TV a ponto adicional dado a nota de SAC, ou seja, se eu aumentar um ponto na nota de SAC, aumenta-se em média 0,59 a nota de confiança. Esse acréscimo pode variar entre 0,47 e 0,70, com 95% de confiança.
+
+# Etapa 3 - Previsão
+
+Agora que a equação foi validada, podemos realizar previsões. A previsão de interesse era: qual a nota prevista de confiança para uma empresa de TV que recebeu nota 2 de SAC?
+
+```{r previsao_nota,echo=FALSE}
+
+newdata = data.frame(SAC = c(2))
+# Insira o(s) valor(es) desejado(s) da variável quantitativa independente no lugar de xp
+
+tabela3=round(predict(modelo, newdata, interval = "confidence", level= 0.95),2)
+
+kable(tabela3,caption="Previsão e intervalo de confiança da previsão")
+
+```
+
+A nota prevista de confiança de uma empresa de TV que recebeu nota 2 de SAC é 2,57, podendo variar entre 2,42 e 2,73, com 95% de confiança.
+
+FIT –\> Valor ajustado, casa seja exatamente 2
+
+LWR –\> Menor valor dentro do intervalo
+
+UPR –\> Maior valor dentro do intervalo

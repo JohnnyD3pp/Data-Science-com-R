@@ -1,0 +1,138 @@
+---
+title: "Aula 04"
+author: "Johnny Depp"
+date: "2026-02-26"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+options(scipen = 9999) # Evita uso de notação científica
+
+library(tidyverse)
+setwd("C:/Users/kayla.abreu/OneDrive - ESPM/Documentos/Base de Dados CDD")
+library(readxl)
+dados = read_xlsx("Aula 03.xlsx")
+library(RColorBrewer)
+```
+
+```{r ordenar, include=FALSE}
+# Ordenar Dados ----
+
+dados_ord = dados %>% mutate(Gasto=factor(Gasto,levels=c("Baixo_gasto","Alto_gasto"))) %>% mutate(Endividamento=factor(Endividamento,levels=c("Baixo", "Intermediario", "Alto")))
+```
+
+# Gráfico de colunas com cor diferente
+
+```{r g_colunas, echo=FALSE}
+ggplot(dados_ord, aes(x = Profissao, fill=Profissao)) + 
+geom_bar() + labs(title = "Profissões dos Clientes", x = "Profissão", y = "Clientes") + guides(fill="none") + scale_fill_brewer(palette="Spectral")
+```
+
+# Boxplot
+
+```{r boxplot, echo=FALSE}
+ggplot(dados_ord, aes(y = Investimento, x= Endividamento, fill= Endividamento)) + geom_boxplot(color="hotpink",outlier.color="white") + labs(title = "Investimento x Endividamento dos Clientes", x = "Endividamento", y = "Investimento") + scale_fill_brewer(palette="Set1") + guides(fill="none")
+```
+
+```{r filtro, include=FALSE}
+# Filtrar cliente com renda inferior a 100k
+
+dados_cln = filter(dados_ord, Renda <= 100000)
+```
+
+# Histograma
+
+```{r histograma, echo=FALSE}
+ggplot(dados_cln, aes(x = Renda, fill=Gasto)) + geom_histogram(color="lightblue", bins=10) + facet_grid(Gasto ~.) + labs(title = "Renda x Gastos de um Cliente", x = "Renda", y = "Gasto")+ scale_fill_brewer(palette="Set1") + guides(fill="none")
+
+# Manter o "bins" de um histograma entre 10 e 15
+```
+
+## Histograma com % no eixo Y
+
+```{r histo_porcentagem, echo=FALSE}
+ggplot(dados_cln, aes(x = Renda, fill=Gasto)) + geom_histogram(aes(y = after_stat(count) / tapply(after_stat(count), PANEL, sum)[PANEL] * 100), color="hotpink", bins=10) + facet_grid(Gasto ~.) + labs(title = "Renda x % Gastos de um Cliente", x = "Renda", y = "% Gastos")+ scale_fill_brewer(palette="PiYG") + guides(fill="none") 
+
+# Manter o "bins" de um histograma entre 10 e 15
+```
+
+# Gráfico de Dispersão
+
+```{r dispersao, echo=FALSE}
+ggplot(dados_cln, aes(y = Investimento, x=Renda)) + geom_point(color="purple") + labs(title = "A renda influência no investimento?", x = "Renda", y = "Investimento") 
+```
+
+## Gráfico de dispersão com linha de tendência
+
+```{r disp_linhatend, echo=FALSE}
+ggplot(dados_cln, aes(y = Investimento, x= Renda)) + geom_point(color="orange") + labs(title = "Tendência da renda influênciar o investimento", x = "Renda", y = "Investimento") + geom_smooth(method="lm",se=FALSE,color="red") 
+```
+
+## Gráfico de dispersão segmentado
+
+```{r disp_segment, echo=FALSE}
+# Segmentação  pelas categorias de uma variável qualitativa
+
+ggplot(dados_cln, aes(y = Investimento, x= Renda, color=Gasto)) + geom_point() + scale_color_brewer(palette="Paired",name="Nível de gasto") + labs(title = "Nível de gasto x Renda x Investimento", x = "Renda", y = "Investimento")
+
+# name (legenda), indica o que as cores representam
+```
+
+## Gráfico de dispersão segmentado e com linhas de tendência
+
+```{r disp_seg_linhat, echo=FALSE}
+ggplot(dados_cln, aes(y = Investimento, x=Renda, color=Gasto)) + geom_point(alpha=0.3) + scale_color_brewer(palette="Paired",name="Nível de gasto") + labs(title = "Nível de gasto x Renda x Investimento", x = "Renda", y = "Investimento") + geom_smooth(method="lm",se=FALSE)
+```
+
+# Gráfico de colunas segmentado
+
+## Colunas empilhadas (com contagens)
+
+```{r colunas_seg_emp, echo=FALSE}
+# Segmentação pelas categorias de outra variável qualitativa
+# (vale para todas as colunas percencentes a esse tópico)
+
+ggplot(dados_ord, aes(x = Gasto, fill = Endividamento)) + geom_bar(position = "stack")+ labs(title = "Distribuição: Endividamento x Gasto", x = "Gasto", y = "Endividamento") + scale_fill_brewer(palette="Accent",name="Nível de Endividamento") 
+```
+
+## Colunas lado-a-lado (com contagens)
+
+```{r colunas_seg_ladolado, echo=FALSE}
+ggplot(dados_ord, aes(x = Gasto, fill = Endividamento)) + geom_bar(position = "dodge")+ labs(title = "Distribuição: Endividamento x Gasto", x = "Gasto", y = "Endividamento") + scale_fill_brewer(palette="Set1",name="Nível de Endividamento") 
+```
+
+## Colunas empilhadas (com %)
+
+```{r colunas_emp, echo=FALSE}
+ggplot(dados_ord, aes(x = Gasto, fill = Endividamento)) + geom_bar(position = "fill") + scale_y_continuous(breaks = seq(0, 1, .2),labels=scales::percent_format())+ labs(title = "Distribuição: Endividamento x Gasto", x = "Gasto", y = "Endividamento") + scale_fill_brewer(palette="Set2",name="Nível de Endividamento")
+
+# Unidade desejada no eixo y entre os marcadores (pós 0, 1...) .2 (20%), muda de 20 em 20%
+```
+
+## Colunas empilhadas (com %) alterando os rótulos dos eixos
+
+```{r colunas_emp_altrot, echo=FALSE}
+ggplot(dados_ord, aes(x = Gasto, fill = Endividamento)) + geom_bar(position = "fill") + scale_y_continuous(breaks = seq(0, 1, .2), labels=scales::percent_format()) + scale_x_discrete(labels=c("Alto_gasto"="Alto Gasto","Baixo_gasto"="Baixo Gasto"))+ labs(title = "Distribuição: Endividamento x Gasto", x = "Gasto", y = "Endividamento") + scale_fill_brewer(palette="Set2",name="Nível de Endividamento", labels=c("Baixo"="Baixo","Intermediario"="Intermediário", "Alto"="Alto")) 
+```
+
+```{r porcentagem, echo=FALSE}
+# Construir a tabela porcentagem (para usar abaixo)
+
+tabela_percent  =  dados_ord  %>%   group_by(Gasto, Endividamento)  %>%   summarize(n = n())  %>%   mutate(pct = n/sum(n), rotulo = scales::percent(pct))
+```
+
+## Colunas empilhadas (com %) e as % inclusas no gráfico
+
+```{r colunas_emp_porcentagem_inclusa, echo=FALSE}
+ggplot(tabela_percent, aes(x = Gasto, y=pct, fill = Endividamento)) + geom_bar(stat="identity",position = "fill") + scale_y_continuous(breaks = seq(0, 1, .2), labels = scales::percent_format()) + geom_text(aes(label = rotulo), size = 3, position = position_stack(vjust = 0.5)) + scale_x_discrete(labels=c("Baixo_gasto"="Baixo Gasto","Alto_gasto"="Alto Gasto")) + labs(title = "Distribuição: Endividamento x Gasto", x = "Gasto", y = "Endividamento") + scale_fill_brewer(palette="Set2",name="Nível de Endividamento", labels=c("Baixo"="Baixo","Intermediario"="Intermediário", "Alto"="Alto"))
+```
+
+# Alterando o tamanho dos pontos do gráfico de dispersão 
+
+```{r dispersao_pontos, echo=FALSE}
+# De acordo com os valores de uma variável quantitativa
+
+ggplot(dados_cln, aes(y = Investimento, x= Renda, size = Saldo_Mensal)) + geom_point(color="red", alpha=.3) + labs(title = "A renda influência o investimento?", x = "Renda", y = "Investimento") + scale_size_area(max_size=2) 
+```
+
