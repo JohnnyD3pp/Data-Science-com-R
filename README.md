@@ -1,58 +1,81 @@
 Portfólio de Ciência de Dados e Modelagem Estatística com R
-Este repositório reúne projetos desenvolvidos em linguagem R, focados na transposição de dados brutos para relatórios analíticos e dashboards interativos. O conteúdo abrange desde a manipulação de dados com o ecossistema Tidyverse até a implementação de modelos de regressão linear e interfaces dinâmicas em Shiny.
+Este repositório reúne projetos desenvolvidos em R, com foco em análise de dados, modelagem estatística, relatórios técnicos e dashboards interativos. Os trabalhos demonstram o fluxo completo de um projeto analítico: importação e tratamento de dados, análise exploratória, visualização, interpretação estatística e comunicação dos resultados.
 
-Dashboards Interativos (FlexDashboard)
-As aplicações abaixo estão hospedadas na plataforma ShinyApps. Para visualização, utilize os links diretos:
+Projetos em Destaque
+Projeto	Tema	Entregáveis
+Análise de Turnover	Investigação de fatores associados à rotatividade de colaboradores, incluindo departamento, evasão e frequência de viagens corporativas.	Relatório PDF · Código RMarkdown
+Estudo de Inadimplência	Análise estatística sobre a relação entre nível de escolaridade e probabilidade de inadimplência em concessões de crédito.	Relatório PDF · Código RMarkdown
+Regressão Linear Simples	Modelo preditivo para avaliar a influência da qualidade do atendimento via SAC na confiança do consumidor.	Relatório PDF · Código RMarkdown
 
-Aula 05: https://johnnyd3pp.shinyapps.io/Aula_05/   
+Dashboards Interativos
+As aplicações abaixo foram desenvolvidas com FlexDashboard e publicadas na plataforma ShinyApps.
 
-Aula 07: https://johnnyd3pp.shinyapps.io/Aula_07/   
+Dashboard	Link
+Aula 05	Acessar aplicação
+Aula 07	Acessar aplicação
+Atividade Dashboard	Acessar aplicação
+Atividade 2 - Grupo 6	Acessar aplicação
 
-Atividade Dashboard: https://johnnyd3pp.shinyapps.io/Atividade_Dashboard/   
+Relatórios Técnicos
+Os relatórios foram compilados em PDF a partir de arquivos RMarkdown. No GitHub, os links abaixo abrem o próprio arquivo PDF no navegador ou permitem o download direto.
 
-Atividade 2 Grupo 6: https://johnnyd3pp.shinyapps.io/Atividade_2_Grupo6/   
+Relatório	Descrição
+Atividade 1	Análise de turnover e fatores associados à rotatividade de pessoal.
+Atividade Teste	Estudo de inadimplência com foco no impacto do nível de escolaridade.
+Aula 03	Visualização de dados com ggplot2, incluindo boxplots e gráficos de colunas.
+Aula 04	Análise exploratória com histogramas, dispersão e avaliação de correlações.
+Aula 10	Regressão linear simples, validação de coeficientes e intervalos de confiança.
 
-Relatórios Técnicos (PDF's RMarkDown)
-Resultados finais compilados via RMarkDown. Estes documentos apresentam a interpretação estatística e visual dos dados. Os arquivos encontram-se no diretório PDF%27s%20RMarkDown/.
-
-Análises Práticas e Estudos de Caso
-
-Análise de Turnover (Atividade 1): Investigação sobre rotatividade de pessoal, identificando correlações entre evasão, departamentos específicos (como Recursos Humanos) e frequência de viagens corporativas.  
-
-
-Estudo de Inadimplência (Atividade Teste): Análise estatística sobre o impacto do nível de escolaridade na probabilidade de inadimplência em concessões de crédito.  
-
-Material Acadêmico e Evolução Técnica
-
-Visualização com ggplot2 (Aula 03): Implementação de gramática de gráficos para análise de distribuição de gastos e perfis profissionais através de boxplots e colunas.  
-
-
-Análise Exploratória de Dados (Aula 04): Exploração de histogramas de renda e diagramas de dispersão para avaliar a correlação entre investimento e endividamento.  
-
-
-Regressão Linear Simples (Aula 10): Modelagem preditiva para verificar a influência da qualidade do atendimento (SAC) na confiança do consumidor, incluindo validação de coeficientes e intervalos de confiança.  
+Conteúdo do Repositório
+text
 
 
-Estatística Inferencial (Aula 11): Aprofundamento em modelos de regressão e testes de hipóteses.  
 
-Scripts de Programação (.R)
-Arquivos contendo a lógica de processamento, tratamento de dados e estruturação de interfaces:
+.
+├── Introdução R/
+│   ├── Introducao.R
+│   ├── Aula 01_02.R
+│   └── Aula 06 - Exemplo shiny.R
+├── PDF's RMarkDown/
+│   ├── Atividade-1.pdf
+│   ├── Atividade-Teste.pdf
+│   ├── Aula-03.pdf
+│   ├── Aula-04.pdf
+│   └── Aula-10.pdf
+├── Práticas FlexDashboard/
+│   ├── Aula 05.Rmd
+│   ├── Aula 07 - ALUNOS.Rmd
+│   ├── Atividade Dashboard.Rmd
+│   └── Atividade 2 - Grupo6.Rmd
+└── Práticas RMarkdown/
+    ├── Atividade 1.Rmd
+    ├── Atividade Teste.Rmd
+    ├── Aula 03.Rmd
+    ├── Aula 04.Rmd
+    └── Aula 10.Rmd
 
-Introducao.R: Fundamentos de ambientação no RStudio, manipulação de objetos, vetores e tipos de dados.
 
-Aula 01_02.R: Rotinas de ETL (Extract, Transform, Load), leitura de arquivos CSV, tratamento de dados ausentes (NAs) e operações agregadas com o pacote dplyr.
 
-Aula 06 - Exemplo shiny.R: Estruturação de aplicações interativas, definindo componentes de interface de usuário (UI) e lógica de servidor para renderização dinâmica de gráficos.
+Scripts de Programação
+Arquivo	Conteúdo
+Introducao.R	Fundamentos de ambientação no RStudio, manipulação de objetos, vetores e tipos de dados.
+Aula 01_02.R	Rotinas de ETL, leitura de arquivos CSV, tratamento de valores ausentes e operações agregadas com dplyr.
+Aula 06 - Exemplo shiny.R	Estruturação de aplicações Shiny com componentes de interface e lógica de servidor.
 
-Tecnologias Aplicadas
+Tecnologias Utilizadas
+
 Linguagem: R
 
-Visualização: ggplot2, flexdashboard, plotly
+Manipulação de dados: dplyr, tidyverse
 
-Interface Interativa: Shiny
+Visualização: ggplot2, plotly
 
-Manipulação de Dados: dplyr, tidyverse
+Dashboards: flexdashboard
 
-Documentação: RMarkDown (Output PDF via LaTeX)
+Aplicações interativas: Shiny
 
-Organizado por: Kayla Abreu
+Documentação técnica: RMarkdown com saída em PDF via LaTeX
+
+
+Sobre
+Portfólio organizado por Kayla Abreu, com projetos acadêmicos e práticos voltados à aplicação de estatística, visualização de dados e desenvolvimento de relatórios analíticos com R.
