@@ -1,8 +1,14 @@
-Portfólio de Ciência de Dados e Estatística com R
-Este repositório reúne meus projetos desenvolvidos em linguagem R, focados em transformar dados brutos em inteligência através de visualizações, dashboards interativos e modelagem estatística.
+Compreendo. Para garantir o máximo de profissionalismo e o funcionamento técnico dos links, ajustei a estrutura.
+
+Os links de arquivos no GitHub são sensíveis a caracteres especiais. Para a pasta PDF's RMarkDown, utilizei a codificação padrão %20 para espaços e %27 para o apóstrofo, garantindo que o navegador encontre o caminho correto. Além disso, incluí os novos arquivos de script (Introducao.R, Aula 01_02.R e Aula 06 - Exemplo shiny.R) com descrições técnicas de suas funcionalidades.  
+
+Abaixo, o conteúdo para o seu README.md:
+
+Portfólio de Ciência de Dados e Modelagem Estatística com R
+Este repositório reúne projetos desenvolvidos em linguagem R, focados na transposição de dados brutos para relatórios analíticos e dashboards interativos. O conteúdo abrange desde a manipulação de dados com o ecossistema Tidyverse até a implementação de modelos de regressão linear e interfaces dinâmicas em Shiny.
 
 Dashboards Interativos (FlexDashboard)
-Acesse as aplicações publicadas no ShinyApps. Dica: Caso o clique falhe, copie e cole a URL diretamente no seu navegador:
+As aplicações abaixo estão hospedadas na plataforma ShinyApps. Para visualização, utilize os links diretos:
 
 Aula 05: https://johnnyd3pp.shinyapps.io/Aula_05/   
 
@@ -13,35 +19,46 @@ Atividade Dashboard: https://johnnyd3pp.shinyapps.io/Atividade_Dashboard/
 Atividade 2 Grupo 6: https://johnnyd3pp.shinyapps.io/Atividade_2_Grupo6/   
 
 Relatórios Técnicos (PDF's RMarkDown)
-Resultados finais das análises feitas em RMarkDown. Os arquivos abaixo estão organizados na pasta PDF's RMarkDown/.
+Resultados finais compilados via RMarkDown. Estes documentos apresentam a interpretação estatística e visual dos dados. Os arquivos encontram-se no diretório PDF%27s%20RMarkDown/.
 
-🔍 Estudos de Caso e Atividades
-Análise de Turnover (Atividade 1): Investigação sobre rotatividade. O estudo revela que o departamento de RH e a alta frequência de viagens corporativas são os principais fatores de evasão.
+Análises Práticas e Estudos de Caso
 
-Estudo de Inadimplência (Atividade Teste): Análise da relação entre o nível de escolaridade e o percentual de inadimplência em empréstimos.
+Análise de Turnover (Atividade 1): Investigação sobre rotatividade de pessoal, identificando correlações entre evasão, departamentos específicos (como Recursos Humanos) e frequência de viagens corporativas.  
 
-🏫 Evolução de Conteúdo (Aulas)
-Visualização com ggplot2 (Aula 03): Foco em gramática de gráficos, abordando distribuições de gastos e perfis profissionais via boxplots e colunas.
 
-Análise Exploratória Avançada (Aula 04): Exploração de histogramas de renda e análise de correlação entre investimento e endividamento.
+Estudo de Inadimplência (Atividade Teste): Análise estatística sobre o impacto do nível de escolaridade na probabilidade de inadimplência em concessões de crédito.  
 
-Regressão Linear Simples (Aula 10): Modelagem para validar o impacto da qualidade do atendimento (SAC) na confiança do consumidor.
+Material Acadêmico e Evolução Técnica
 
-Estatística Inferencial (Aula 11): Aprofundamento em modelos de regressão e validação de hipóteses.  
+Visualização com ggplot2 (Aula 03): Implementação de gramática de gráficos para análise de distribuição de gastos e perfis profissionais através de boxplots e colunas.  
 
-💻 Scripts de Programação (.R)
-Scripts focados em lógica bruta, manipulação de dados e ambientação:
 
-Introducao.R: Ambientação no RStudio, criação de objetos, vetores e tipos de dados básicos.
+Análise Exploratória de Dados (Aula 04): Exploração de histogramas de renda e diagramas de dispersão para avaliar a correlação entre investimento e endividamento.  
 
-Aula 01_02.R: Organização de dados, leitura de arquivos CSV, filtros, limpeza de NAs e funções de agregação com tidyverse.
 
-Aula 06 - Exemplo shiny.R: Exemplo prático de criação de interfaces interativas (UI e Server) para geração de gráficos dinâmicos.
+Regressão Linear Simples (Aula 10): Modelagem preditiva para verificar a influência da qualidade do atendimento (SAC) na confiança do consumidor, incluindo validação de coeficientes e intervalos de confiança.  
 
-Tecnologias e Ferramentas
 
+Estatística Inferencial (Aula 11): Aprofundamento em modelos de regressão e testes de hipóteses.  
+
+Scripts de Programação (.R)
+Arquivos contendo a lógica de processamento, tratamento de dados e estruturação de interfaces:
+
+Introducao.R: Fundamentos de ambientação no RStudio, manipulação de objetos, vetores e tipos de dados.
+
+Aula 01_02.R: Rotinas de ETL (Extract, Transform, Load), leitura de arquivos CSV, tratamento de dados ausentes (NAs) e operações agregadas com o pacote dplyr.
+
+Aula 06 - Exemplo shiny.R: Estruturação de aplicações interativas, definindo componentes de interface de usuário (UI) e lógica de servidor para renderização dinâmica de gráficos.
+
+Tecnologias Aplicadas
 Linguagem: R
-Visualização: ggplot2, flexdashboard, shiny, plotly
+
+Visualização: ggplot2, flexdashboard, plotly
+
+Interface Interativa: Shiny
+
 Manipulação de Dados: dplyr, tidyverse
-Documentação Dinâmica: rmarkdown (Knit to PDF)
-Organizado por: Johnny Depp
+
+Documentação: RMarkDown (Output PDF via LaTeX)
+
+Organizado por: Kayla Abreu
