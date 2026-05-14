@@ -5,6 +5,7 @@
 | Análise de Turnover | Investigação de fatores associados à rotatividade de colaboradores, incluindo departamento, evasão e frequência de viagens corporativas. | [Relatório PDF](PDF%27s%20RMarkDown/Atividade-1.pdf) · [Código RMarkdown](<Práticas RMarkdown/Atividade 1.Rmd>) |
 | Estudo de Inadimplência | Análise estatística sobre a relação entre nível de escolaridade e probabilidade de inadimplência em concessões de crédito. | [Relatório PDF](PDF%27s%20RMarkDown/Atividade-Teste.pdf) · [Código RMarkdown](<Práticas RMarkdown/Atividade Teste.Rmd>) |
 | Regressão Linear Simples | Modelo preditivo para avaliar a influência da qualidade do atendimento via SAC na confiança do consumidor. | [Relatório PDF](PDF%27s%20RMarkDown/Aula-10.pdf) · [Código RMarkdown](<Práticas RMarkdown/Aula 10.Rmd>) |
+| Regressão e Testes de Hipóteses | Análise da relação entre emissão de moeda e depósitos no Banco Central do Paraguai, com correlação, regressão linear, testes de hipóteses e previsão. | [Relatório PDF](PDF%27s%20RMarkDown/Aula-11.pdf) · [Código RMarkdown](<Práticas RMarkdown/Aula 11.Rmd>) |
 
 ## Dashboards Interativos
 
@@ -28,6 +29,7 @@ Os relatórios foram compilados em PDF a partir de arquivos RMarkdown. No GitHub
 | [Aula 03](PDF%27s%20RMarkDown/Aula-03.pdf) | Visualização de dados com `ggplot2`, incluindo boxplots e gráficos de colunas. |
 | [Aula 04](PDF%27s%20RMarkDown/Aula-04.pdf) | Análise exploratória com histogramas, dispersão e avaliação de correlações. |
 | [Aula 10](PDF%27s%20RMarkDown/Aula-10.pdf) | Regressão linear simples, validação de coeficientes e intervalos de confiança. |
+| [Aula 11](PDF%27s%20RMarkDown/Aula-11.pdf) | Regressão linear aplicada à relação entre emissão de moeda e depósitos, com correlação, testes de hipóteses, intervalos de confiança e previsão. |
 
 ## Conteúdo do Repositório
 
@@ -42,7 +44,8 @@ Os relatórios foram compilados em PDF a partir de arquivos RMarkdown. No GitHub
 │   ├── Atividade-Teste.pdf
 │   ├── Aula-03.pdf
 │   ├── Aula-04.pdf
-│   └── Aula-10.pdf
+│   ├── Aula-10.pdf
+│   └── Aula-11.pdf
 ├── Práticas FlexDashboard/
 │   ├── Aula 05.Rmd
 │   ├── Aula 07 - ALUNOS.Rmd
@@ -53,7 +56,8 @@ Os relatórios foram compilados em PDF a partir de arquivos RMarkdown. No GitHub
     ├── Atividade Teste.Rmd
     ├── Aula 03.Rmd
     ├── Aula 04.Rmd
-    └── Aula 10.Rmd
+    ├── Aula 10.Rmd
+    └── Aula 11.Rmd
 ```
 
 ## Scripts de Programação
@@ -64,6 +68,24 @@ Os relatórios foram compilados em PDF a partir de arquivos RMarkdown. No GitHub
 | [`Aula 01_02.R`](<Introdução R/Aula 01_02.R>) | Rotinas de ETL, leitura de arquivos CSV, tratamento de valores ausentes e operações agregadas com `dplyr`. |
 | [`Aula 06 - Exemplo shiny.R`](<Introdução R/Aula 06 - Exemplo shiny.R>) | Estruturação de aplicações Shiny com componentes de interface e lógica de servidor. |
 
+## Base de Dados Externa
+
+Alguns scripts em `.R` utilizam arquivos de dados armazenados localmente, como `Aula 02.csv` e `Aula 05.xlsx`. Esses arquivos não estão incluídos neste repositório e devem ser baixados ou preparados antes da execução dos scripts.
+
+A base utilizada como referência é o dataset **Credit Score Classification**, disponível no Kaggle:
+
+[Acessar dataset no Kaggle](https://www.kaggle.com/datasets/parisrohan/credit-score-classification)
+
+Para reproduzir as análises:
+
+1. Acesse o link do dataset no Kaggle.
+2. Baixe os arquivos da base de dados.
+3. Salve os arquivos na pasta desejada no seu computador.
+4. Ajuste o caminho definido em `setwd()` nos scripts `.R`.
+5. Caso necessário, renomeie ou converta os arquivos para os nomes esperados nos scripts, como `Aula 02.csv` e `Aula 05.xlsx`.
+
+Essa etapa é necessária porque os scripts fazem leitura de arquivos locais e o caminho original depende do ambiente de quem desenvolveu o projeto.
+
 ## Tecnologias Utilizadas
 
 - **Linguagem:** R
@@ -73,6 +95,6 @@ Os relatórios foram compilados em PDF a partir de arquivos RMarkdown. No GitHub
 - **Aplicações interativas:** Shiny
 - **Documentação técnica:** RMarkdown com saída em PDF via LaTeX
 
-## Sobre
+## Objetivo
 
-Portfólio organizado por **Kayla Abreu**, com projetos acadêmicos e práticos voltados à aplicação de estatística, visualização de dados e desenvolvimento de relatórios analíticos com R.
+Este repositório é dedicado ao aprendizado e à prática de **Ciência de Dados com R**, reunindo exercícios acadêmicos, relatórios técnicos e dashboards voltados à análise estatística, visualização de dados e comunicação de resultados.
