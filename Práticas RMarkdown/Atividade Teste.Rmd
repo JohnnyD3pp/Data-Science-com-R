@@ -1,6 +1,6 @@
 ---
 title: "Teste"
-author: "Johnny Depp"
+author: "Introdução a Ciência de Dados - ESPM"
 date: "2026-03-10"
 output: pdf_document
 ---
