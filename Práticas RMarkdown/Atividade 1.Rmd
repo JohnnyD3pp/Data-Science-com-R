@@ -1,6 +1,6 @@
 ---
 title: "Atividade 1"
-author: "Ananditos - Grupo 6"
+author: "Introdução a Ciência de Dados - ESPM"
 date: "2026-03-03"
 output: pdf_document
 ---
