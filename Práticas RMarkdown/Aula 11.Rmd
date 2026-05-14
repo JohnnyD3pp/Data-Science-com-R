@@ -1,0 +1,205 @@
+---
+title: "Moedas"
+author: "Introdução a Ciência de Dados - ESPM"
+date: "2026-05-12"
+output: pdf_document
+---
+
+```{r ler_dados, include=FALSE}
+
+library(flexdashboard)
+library(readxl)
+library(shiny)
+library(tidyverse)
+library(DT)
+library(RColorBrewer)
+library(scales)
+library(plotly)
+library(ggplot2)
+library(knitr) # Permite tabelas formatadas
+
+setwd("C:/Users/kayla.abreu/OneDrive - ESPM/Documentos/Base de Dados CDD")
+
+dados = read_xlsx("Moedas.xlsx")
+```
+
+## Etapa 1 - O que queremos?
+
+a)  Calcule a correlação para o problema e descreva a relação entre papel- moeda emitido e depósitos no Banco Central do Paraguai através de um gráfico.
+b)  Realize o teste de hipóteses dos coeficientes do modelo. Transcreva as tabelas com os resultados dos testes para os coeficientes do modelo e analise-a.
+c)  Interprete os coeficientes de regressão, descrevendo os intervalos de variação dos coeficientes.
+d)  Suponha que para conter a inflação (é claro que essa ideia está sendo estudada em ceteris paribus) é necessário que para cada valor de papel-moeda emitido seja necessário o mesmo valor em depósitos (reservas). Com base na inclinação da equação obtida no item (c), você acredita que a equação sinaliza inflação ou deflação? Justifique
+e)  Faça a previsão do depósito no Banco Central do Paraguai em um mês que foram emitidos 4.500.000 milhões de guaranis.
+
+## Calculo da correlação
+
+```{r emissaoxDeposito, echo=FALSE, message=FALSE}
+
+# Message=false tira a mensagem chata que aparece
+
+ggplot(dados, aes(y = Depositos, x=
+Emissao)) + geom_point(color="black") + labs(title = "Emissão de Moeda X Depósito", x = "Moeda Emitida", y = "Número de Depósitos") +
+geom_smooth(method="lm",se=FALSE,color="hotpink")
+
+```
+
+```{r calculo_emissaoxDep, echo=FALSE}
+
+# Calcular o coeficiente da correlação linear
+cat("A correlação entre a emissão da moeda e número de depósitos é:",round(cor(dados$Emissao,dados$Depositos),2))
+
+# Cat é o comando para concatenar, ou seja, essa mensagem vai aparecer antes do resultado no nosso documento PDF.
+```
+
+Ao analisar o resultado da correlação percebemos que é indicado uma associação linear forte, pois apresenta um resultado entre 0,70 e 1.
+
+## Teste de Hipóteses
+
+```{r teste, echo=FALSE}
+
+modelo = lm(Depositos ~ Emissao, data= dados)
+
+resumo = summary(modelo)
+
+tabela1 = round(resumo$coefficients,3) # guarda os coeficientes apenas com duas casas decimais
+
+tabela2 = round(confint(modelo, level = 0.95),3) # guarda o LI e LS com 95% de confiança para os coeficientes apenas com duas casas decimais
+
+kable(tabela1,caption="Estimativa dos coeficientes e teste de hipóteses") # formata a tabela 1 e adiciona um título (caption)
+
+kable(tabela2,caption="Intervalo de confiança dos coeficientes") # formata a tabela 2 e adiciona um título (caption)
+
+```
+
+A equação estimada de nota de confiança em função da nota dada ao SAC é:
+
+$$ Depositos = 380666,74 + 0,47 Emissao $$
+
+### Primeiro teste de hipóteses:
+
+$H_0: \beta_1 = 0$ (A emissão da moeda não influencia o depósito)
+
+$H_a: \beta_1\neq0$ (A emissão da moeda influencia o depósito)
+
+A estatística de teste $t$ divide a diferença da estimativa do coeficiente com o valor testado pelo erro padrão da estimativa:
+
+$$
+t=\frac{0,47 - 0}{0,05} = 9,54
+$$
+
+Para avaliar se essa estatística $t$ é grande ou não, calcula-se o $valor-p (Pr(>|t|))$.
+
+Regra de decisão:
+
+$valor-p \leq\alpha$: Temos evidências para rejeitar $H_0$
+
+$valor-p > \alpha$: Não temos evidências para rejeitar $H_0$
+
+Em que:
+
+$\alpha$: Nível de significância do teste ("erro máximo" permitido)
+
+100% - Nível de confiança
+
+Logo, para 95% de confiança, temos que:
+
+$valor-p = 0$ ($2^a$ linha da tabela 1) $\leq \alpha = 0,05$, temos evidências para rejeitar $H_0$
+
+Portanto, com 95% de confiança, temos evidências de que a emissão da moeda influencia o número de depósitos
+
+## Minha Conclusão:
+
+### Primeiro teste de hipóteses
+
+Observação: Estamos fazendo o teste de hipótese do coeficiente angular, então estamos olhando a linha de baixo.
+
+### H0/Ha, Valor T e Valor P
+
+H0: B1 == 0 –\> Indica que a emissão da moeda não influencia o número de depósitos
+
+Ha: B1 != 0 –\> Indica que a emissão da moeda influencia o número de depósitos
+
+B1 = 0,47
+
+T value = B1 / Erro Padrão (Std. Error)
+
+-   O que se torna: 0,47 / 0,05 (no nosso caso)
+
+### Alfa
+
+Alfa ($\alpha$) –\> Nível de significância ("O erro máximo permitido)
+
+O alfa é calculado do seguinte modo:
+
+-   Alfa = 100% - Nível de confiança (que no nosso caso é 95%)
+
+Observação: Escolhemos esse valor de 95%
+
+Se o valor - p for menor do que alfa –\> Temos evidências para rejeitar H0
+
+Se o valor - p for maior do que alfa –\> Não temos evidências para rejeitar H0
+
+***Se não rejeitamos H0, isso indica que não existe relação***
+
+### Conclusão do teste de hipóteses do coeficiente angular
+
+No nosso caso, Valor - P é menor do que alfa, ou seja, temos evidências para rejeitar H0, o que indica que:
+
+A emissão da moeda influencia sim o número de depósitos
+
+## Teste de hipótese 2
+
+Observação: Estamos fazendo o teste de hipótese do coeficiente linear, então estamos olhando a linha de cima.
+
+Agora as hipóteses são:
+
+$H_0: \beta_0 = 0$ (O número esperado de depósitos é zero, se a emissão de moedas for zero. Espera-se que não haja depósitos se não houver missão de moeda)
+
+$H_a: \beta_0 \neq0$ (O número esperado de depósitos é diferente de zero, se a emissão de moedas for zero. Espera-se que haja depósitos mesmo sem a missão de moeda)
+
+$valor-p$ $(1^a$ linha) = $0,052 > \alpha = 0,05$, então não temos evidências para rejeitar $H_0$. Ou seja, não temos evidências de que haja depósitos quando não há emissão de moeda com 95% de confiança.
+
+E se rejeitarmos $H_0$, temos evidências de que $B_0 \neq 0$
+
+```{r sem_intercepto, echo=FALSE}
+
+modelo2 = lm(Depositos~Emissao-1, data= dados)
+
+resumo2 = summary(modelo2)
+
+tabela3 = round(resumo2$coefficients,3) # guarda os coeficientes apenas com duas casas decimais
+
+tabela4 = round(confint(modelo2, level = 0.95),3) # guarda o LI e LS com 95% de confiança para os coeficientes apenas com duas casas decimais
+
+kable(tabela3,caption="Estimativa dos coeficientes e teste de hipóteses - SEM INTERCEPTO") # formata a tabela 1 e adiciona um título (caption
+
+kable(tabela4,caption="Intervalo de confiança dos coeficientes - SEM INTERCEPTO") # formata a tabela 2 e adiciona um título (caption)
+
+
+```
+
+### Equação Final
+
+$$
+Depósitos = 0,57Emissão
+$$
+
+# Etapa 3 - Previsão
+
+Agora que a equação foi validada, podemos realizar previsões. A previsão de interesse era: Qual seria o depósito no Banco Central do Paraguai em um mês considerando que foram emitidos 4.500.000 milhões de guaranis?
+
+```{r previsao_nota,echo=FALSE}
+newdata = data.frame(Emissao = c(4500000))# Insira o(s) valor(es) desejado(s) da variável quantitativa independente no lugar de xp
+
+tabela3=round(predict(modelo2, newdata, interval = "confidence", level= 0.95),2)
+
+kable(tabela3,caption="Previsão e intervalo de confiança da previsão") 
+```
+
+O número de depósitos previstos deste banco considerando a emissão de 4.500,000 moedas é de 2.562,313, podendo variar entre 2.492,778 e 2.631,849 com 95% de confiança
+
+FIT –\> Valor ajustado, casa seja exatamente 4.500,000
+
+LWR –\> Menor valor dentro do intervalo
+
+UPR –\> Maior valor dentro do intervalo
