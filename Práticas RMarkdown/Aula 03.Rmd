@@ -1,6 +1,6 @@
 ---
 title: "Aula 03 - Gráficos"
-author: "Johnny Depp"
+author: "Introdução a Ciência de Dados - ESPM"
 date: "2026-02-19"
 output: pdf_document
 ---
