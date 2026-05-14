@@ -1,6 +1,6 @@
 ---
 title: "Aula_10"
-author: "Johnny Depp"
+author: "Introdução a Ciência de Dados - ESPM"
 date: "2026-05-05"
 output: pdf_document
 ---
