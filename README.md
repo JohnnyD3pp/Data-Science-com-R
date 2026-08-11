@@ -80,11 +80,11 @@ Para reproduzir as análises:
 
 1. Acesse o link do dataset no Kaggle.
 2. Baixe os arquivos da base de dados.
-3. Salve os arquivos na pasta desejada no seu computador.
-4. Ajuste o caminho definido em `setwd()` nos scripts `.R`.
+3. Salve os arquivos na pasta `Downloads`, pois os scripts estão configurados com `setwd("Downloads")`.
+4. Caso utilize outra pasta ou outro computador, ajuste o caminho definido em `setwd()` para o local onde os arquivos foram salvos.
 5. Caso necessário, renomeie ou converta os arquivos para os nomes esperados nos scripts, como `Aula 02.csv` e `Aula 05.xlsx`.
 
-Essa etapa é necessária porque os scripts fazem leitura de arquivos locais e o caminho original depende do ambiente de quem desenvolveu o projeto.
+Essa etapa é necessária porque os scripts fazem leitura de arquivos locais. Se os dados estiverem na pasta `Downloads`, o caminho atual pode ser mantido; caso contrário, o `setwd()` deve ser alterado conforme o ambiente de execução.
 
 ## Tecnologias Utilizadas
 

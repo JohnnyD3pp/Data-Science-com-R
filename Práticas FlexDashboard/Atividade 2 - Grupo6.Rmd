@@ -29,7 +29,7 @@ library(readxl)
 # LEITURA DOS DADOS
 # Ajuste o caminho conforme necessário
 # -------------------------------------------------------
-setwd("C:/Users/kayla.abreu/OneDrive - ESPM/Documentos/Base de Dados CDD")
+setwd("Downloads")
 dados = read_xlsx("Atividade 2 - v6.xlsx")
 
 # Remove linhas com NA nas colunas essenciais

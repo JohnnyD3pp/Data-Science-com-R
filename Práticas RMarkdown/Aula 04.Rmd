@@ -10,7 +10,7 @@ knitr::opts_chunk$set(echo = TRUE)
 options(scipen = 9999) # Evita uso de notação científica
 
 library(tidyverse)
-setwd("C:/Users/kayla.abreu/OneDrive - ESPM/Documentos/Base de Dados CDD")
+setwd("Downloads")
 library(readxl)
 dados = read_xlsx("Aula 03.xlsx")
 library(RColorBrewer)

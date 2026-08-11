@@ -1,6 +1,6 @@
 # 01 - Leitura dos dados ----
 library(tidyverse)
-setwd("C:/Users/kayla.abreu/OneDrive - ESPM/Documentos/Base de Dados CDD")
+setwd("Downloads")
 
 library(readxl)
 dados=read_xlsx("Aula 05.xlsx")

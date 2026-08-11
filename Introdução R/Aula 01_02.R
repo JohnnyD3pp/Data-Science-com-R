@@ -5,7 +5,7 @@
 # 1 - Indicando diretorio de trabalho ----
 
 # Pode ser via ctrl + shift + H ou executar o comando abaixo:
-setwd("C:/Users/kayla.abreu/OneDrive - ESPM/Documentos/Base de Dados CDD")
+setwd("Downloads")
 
 #_________________________________________________________________________
 

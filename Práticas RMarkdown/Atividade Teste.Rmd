@@ -14,7 +14,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r ler_dados, include=FALSE}
 
 library(tidyverse)
-setwd("C:/Users/kayla.abreu/OneDrive - ESPM/Documentos/Base de Dados CDD")
+setwd("Downloads")
 library(readxl)
 dados = read_xlsx("Atividade 1 - Grupo1.xlsx")
 library(RColorBrewer)

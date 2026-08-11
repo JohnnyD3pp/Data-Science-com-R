@@ -18,7 +18,7 @@ library(plotly)
 library(ggplot2)
 library(knitr) # Permite tabelas formatadas
 
-setwd("C:/Users/kayla.abreu/OneDrive - ESPM/Documentos/Base de Dados CDD")
+setwd("Downloads")
 
 dados = read_xlsx("Moedas.xlsx")
 ```

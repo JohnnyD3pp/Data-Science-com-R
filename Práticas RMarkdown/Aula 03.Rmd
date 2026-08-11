@@ -13,7 +13,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r leitura_dados, include=FALSE}
 library(tidyverse) # Ativar pacote tidyverse
-setwd("C:/Users/kayla.abreu/OneDrive - ESPM/Documentos/Base de Dados CDD")
+setwd("Downloads")
 library(readxl)
 dados = read_xlsx("Aula 03.xlsx")
 ```

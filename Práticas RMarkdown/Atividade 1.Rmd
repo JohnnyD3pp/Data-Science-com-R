@@ -12,7 +12,7 @@ options(scipen = 9999)
 
 ```{r leitura_dados, include=FALSE}
 library(tidyverse)
-setwd("C:/Users/kayla.abreu/OneDrive - ESPM/Documentos/Base de Dados CDD")
+setwd("Downloads")
 library(readxl)
 dados = read_xlsx("Atividade 01.xlsx")
 library(RColorBrewer)
